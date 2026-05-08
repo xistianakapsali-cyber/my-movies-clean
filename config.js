@@ -11,9 +11,7 @@
         username: "xistianakapsali-cyber",
         repo: "my-movies-clean",
         branch: "main",
-        // Δύο διαφορετικοί φάκελοι
-        publicFolder: "my-movies-clean",        // ← ΧΩΡΙΣ links
-        privateFolder: "my-movies-with-links"   // ← ΜΕ links
+        path: "my-movies-clean"    // ← Ο φάκελος με τα αρχεία
     },
     
     app_version: "2.0.0"

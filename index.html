@@ -635,86 +635,48 @@ async function checkForGitHubUpdates() {
         return;
     }
     
-    // Επέλεξε ποιον φάκελο θα χρησιμοποιήσει ανάλογα με τον χρήστη
-    const usePrivate = isUserLoggedIn && GITHUB_CONFIG.privateFolder;
-    const folder = usePrivate ? GITHUB_CONFIG.privateFolder : GITHUB_CONFIG.publicFolder;
+    const baseUrl = `https://raw.githubusercontent.com/${GITHUB_CONFIG.username}/${GITHUB_CONFIG.repo}/${GITHUB_CONFIG.branch}/${GITHUB_CONFIG.path}`;
     
-    if (!folder) {
-        showToast('⚠️ GitHub folder not configured', '#e50914');
-        return;
-    }
-    
-    const repoType = usePrivate ? '🔒 με links' : '🌐 χωρίς links';
-    showToast(`🔍 Έλεγχος ενημέρωσης ${repoType}...`, usePrivate ? '#9b59b6' : '#2196f3');
+    showToast(`🔍 Έλεγχος ενημέρωσης...`, '#2196f3');
     
     try {
-        const baseUrl = `https://raw.githubusercontent.com/${GITHUB_CONFIG.username}/${GITHUB_CONFIG.repo}/${GITHUB_CONFIG.branch}/${folder}`;
         const versionUrl = `${baseUrl}/version.json`;
-        
-        console.log(`📦 Checking ${folder}:`, versionUrl);
+        console.log('📦 Checking:', versionUrl);
         
         const versionRes = await fetch(versionUrl);
-        if (!versionRes.ok) throw new Error(`HTTP ${versionRes.status}: version.json not found in ${folder}`);
+        if (!versionRes.ok) throw new Error(`HTTP ${versionRes.status}: version.json not found`);
         const remote = await versionRes.json();
         
-        const versionKey = usePrivate ? 'private_version' : 'app_version';
-        const currentVersion = localStorage.getItem(versionKey) || (usePrivate ? '0' : CURRENT_VERSION);
-        
-        if (remote.version !== currentVersion) {
-            const message = usePrivate 
-                ? `🔒 Νέα έκδοση με LINKS ${remote.version}!\n\nΘέλετε ενημέρωση;`
-                : `🌐 Νέα δημόσια έκδοση ${remote.version}!\n\nΘέλετε ενημέρωση;`;
-            
-            const shouldUpdate = confirm(message);
+        if (remote.version !== CURRENT_VERSION) {
+            const shouldUpdate = confirm(`Νέα έκδοση ${remote.version}!\n\nΘέλετε ενημέρωση;`);
             if (shouldUpdate) {
                 showToast('📥 Λήψη δεδομένων...', '#2196f3');
                 
                 const dataUrl = `${baseUrl}/movies.json`;
                 const dataRes = await fetch(dataUrl);
-                if (!dataRes.ok) throw new Error(`HTTP ${dataRes.status}: movies.json not found in ${folder}`);
+                if (!dataRes.ok) throw new Error(`HTTP ${dataRes.status}: movies.json not found`);
                 
                 const newData = await dataRes.json();
                 if (!Array.isArray(newData)) throw new Error('Invalid JSON format');
                 
-                if (usePrivate) {
-                    // Private repo: Αντικατάσταση με links
-                    moviesData = newData;
-                    showToast(`✅ Ενημέρωση με LINKS! ${moviesData.length} τίτλοι`, '#2ecc71');
-                } else {
-                    // Public repo: Κράτα τα υπάρχοντα links
-                    const existingLinks = {};
-                    moviesData.forEach(m => { if(m.link && m.link !== '') existingLinks[m.id] = m.link; });
-                    moviesData = newData;
-                    moviesData.forEach(m => {
-                        if(existingLinks[m.id]) m.link = existingLinks[m.id];
-                    });
-                    showToast(`✅ Ενημέρωση! ${moviesData.length} τίτλοι (χωρίς links)`, '#2ecc71');
-                }
-                
+                moviesData = newData;
                 moviesData.forEach((m, i) => m.id = i + 1);
                 saveToLocalStorage();
                 
-                if (usePrivate) {
-                    localStorage.setItem('private_version', remote.version);
-                } else {
-                    CURRENT_VERSION = remote.version;
-                    localStorage.setItem('app_version', CURRENT_VERSION);
-                }
+                CURRENT_VERSION = remote.version;
+                localStorage.setItem('app_version', CURRENT_VERSION);
+                document.getElementById('versionBadge').innerHTML = `Έκδοση: ${CURRENT_VERSION}`;
                 
-                document.getElementById('versionBadge').innerHTML = `Έκδοση: ${CURRENT_VERSION}${isUserLoggedIn ? ' 🔒' : ''}`;
                 posterCache.clear();
                 actorImageCache.clear();
                 updateRecentMoviesList();
                 initFilters();
                 applyFilters();
                 
-                if (currentModalMovieId) {
-                    const currentMovie = moviesData.find(m => m.id === currentModalMovieId);
-                    if (currentMovie) openDetails(currentMovie.title);
-                }
+                showToast(`✅ Ενημέρωση! ${moviesData.length} τίτλοι`, '#2ecc71');
             }
         } else {
-            showToast(`✅ Ήδη στην τελευταία έκδοση`, '#2ecc71');
+            showToast('✅ Τελευταία έκδοση', '#2ecc71');
         }
     } catch(e) {
         console.error('Update error:', e);
