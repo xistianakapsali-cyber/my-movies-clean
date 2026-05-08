@@ -151,7 +151,6 @@ header { padding: 15px 5%; background: var(--card); position: sticky; top: 0; z-
         <button class="dash-btn" onclick="showAddMovieForm()" style="background:#2ecc71;color:white;">➕ Προσθήκη Ταινίας/Σειράς</button>
         <button class="dash-btn" onclick="openPosterEditor()">Επεξεργασία Poster</button>
         <button class="dash-btn" onclick="addMovieByTMDBId()" style="background:#9b59b6;color:white;">🎬 Προσθήκη από TMDB ID</button>
-        <button class="dash-btn" id="showPasswordsBtn" onclick="showPasswordManager()" style="background:#f39c12;color:white;">🔐 Διαχείριση Κωδικών</button>
         <button class="dash-btn" onclick="exportToJSON()">📤 Export JSON (τρέχον)</button>
         <button class="dash-btn" onclick="removeAllLinksAndExport()" style="background:#e67e22;color:white;">🗑️ Αφαίρεση όλων των Link & Export</button>
         <button class="dash-btn" onclick="document.getElementById('importFile').click()">📥 Import JSON</button>
@@ -208,7 +207,7 @@ header { padding: 15px 5%; background: var(--card); position: sticky; top: 0; z-
                     <div class="rating-count">/10</div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 10px;">
-                    <button id="modalDownloadBtn" class="download-btn-yts" style="display:none;" onclick="handleDownloadClick()">ΛΗΨΗ</button>
+                    <button id="modalDownloadBtn" class="download-btn-yts" style="display:none;" onclick="handleDownloadClick()"></button>
                     <a id="modalImdb" class="modal-icon-btn" href="#" target="_blank" style="background:#f5c518;color:#000;">IMDB</a>
                     <a id="modalTmdb" class="modal-icon-btn" href="#" target="_blank" style="background:#01b4e4;">TMDB</a>
                     <button id="modalEditBtn" class="modal-icon-btn" onclick="editCurrentMovie()" style="display:none;">✏️ Επεξεργασία</button>
