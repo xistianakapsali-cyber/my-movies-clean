@@ -233,7 +233,7 @@ header { padding: 15px 5%; background: var(--card); position: sticky; top: 0; z-
 <button id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'});">↑</button>
 <div class="version-badge" id="versionBadge">Έκδοση: 1.0.0</div>
 
-<script src="cfg_a7f3e9c2.js"></script>
+<script src="config.js"></script>
 <script>
 // ============ ΑΡΧΙΚΟΠΟΙΗΣΗ ΑΠΟ CONFIG ============
 let CONFIG = null;
@@ -651,7 +651,8 @@ async function checkForGitHubUpdates() {
             if (shouldUpdate) {
                 showToast('📥 Λήψη δεδομένων...', '#2196f3');
                 
-                const dataUrl = `${baseUrl}/x7k9m2p4q8a3.json`; 
+                const dataUrl = `${baseUrl}/movies.json`;
+                const dataRes = await fetch(dataUrl);
                 if (!dataRes.ok) throw new Error(`HTTP ${dataRes.status}: movies.json not found`);
                 
                 const newData = await dataRes.json();
