@@ -1,5 +1,6 @@
 ﻿const YIOIO_CONFIG = {
     tmdb_api_key: "888d45d72a08e6adad1196a31ef13e85",
+    
     admin_dashboard_hash: "a8578fc57105ffae6ac94536ccb80f30beecfe32e53c8cb20505d478b52e1ad1",
     
     users: {
@@ -9,18 +10,12 @@
     },
     
     github: {
-        // Public repo (χωρίς links) - για αποσυνδεδεμένους χρήστες
-        public: {
-            username: "xistianakapsali-cyber",
-            repo: "my-movies-clean",
-            branch: "main"
-        },
-        // Private repo (με links) - για συνδεδεμένους χρήστες
-        private: {
-            username: "xistianakapsali-cyber",
-            repo: "my-movies-with-links",
-            branch: "main"
-        }
+        username: "xistianakapsali-cyber",
+        repo: "my-movies-clean",
+        branch: "main",
+        // Οι φάκελοι μέσα στο repo
+        publicFolder: "my-movies-clean",
+        privateFolder: "my-movies-with-links"
     },
     
     app_version: "2.0.0"
