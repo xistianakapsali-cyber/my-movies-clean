@@ -651,8 +651,7 @@ async function checkForGitHubUpdates() {
             if (shouldUpdate) {
                 showToast('📥 Λήψη δεδομένων...', '#2196f3');
                 
-                const dataUrl = `${baseUrl}/movies.json`;
-                const dataRes = await fetch(dataUrl);
+                const dataUrl = `${baseUrl}/x7k9m2p4q8a3.json`; 
                 if (!dataRes.ok) throw new Error(`HTTP ${dataRes.status}: movies.json not found`);
                 
                 const newData = await dataRes.json();
