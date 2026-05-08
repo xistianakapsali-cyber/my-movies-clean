@@ -7,12 +7,13 @@
         "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4": "Δημήτρης (Admin)"
     },
     
-    // Απλοποιημένη δομή - ΜΟΝΟ public repo
     github: {
         username: "xistianakapsali-cyber",
         repo: "my-movies-clean",
         branch: "main",
-        folder: "my-movies-clean"  // ← Ο φάκελος μέσα στο repo που έχει τα αρχεία
+        // Δύο διαφορετικοί φάκελοι
+        publicFolder: "my-movies-clean",        // ← ΧΩΡΙΣ links
+        privateFolder: "my-movies-with-links"   // ← ΜΕ links
     },
     
     app_version: "2.0.0"
