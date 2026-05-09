@@ -9,24 +9,24 @@
 <body>
 
 <header>
-    <div class="logo" onclick="resetAllFilters()">YIOIO</div>
+    <div class="logo">YIOIO</div>
     <div class="header-controls">
-        <button class="theme-btn" onclick="toggleTheme()">Theme</button>
-        <button class="filter-type-btn active" data-type="all" id="allMoviesBtn" onclick="handleAllClick(); filterByType('all')">Όλα</button>
-        <button class="filter-type-btn" data-type="Movie" onclick="filterByType('Movie')">Ταινίες</button>
-        <button class="filter-type-btn" data-type="Series" onclick="filterByType('Series')">Σειρές</button>
+        <button class="theme-btn">Theme</button>
+        <button class="filter-type-btn active" data-type="all" id="allMoviesBtn">Όλα</button>
+        <button class="filter-type-btn" data-type="Movie">Ταινίες</button>
+        <button class="filter-type-btn" data-type="Series">Σειρές</button>
         <span id="userNameDisplay" style="margin-right: 10px; font-weight: bold; color: var(--primary);"></span>
-        <button id="loginUserBtn" class="login-btn" onclick="showUserLogin()">Είσοδος</button>
-        <button id="logoutUserBtn" class="logout-user-btn" onclick="logoutUser()" style="display:none;">Αποσύνδεση</button>
+        <button id="loginUserBtn" class="login-btn">Είσοδος</button>
+        <button id="logoutUserBtn" class="logout-user-btn" style="display:none;">Αποσύνδεση</button>
         <div class="count-wrapper">
             <div id="movieCount">Τίτλοι: 0</div>
-            <button class="update-btn-header" onclick="checkForGitHubUpdates()">Ενημέρωση</button>
+            <button class="update-btn-header">Ενημέρωση</button>
         </div>
     </div>
 </header>
 
 <div class="dashboard" id="dashboard" style="display:none;">
-    <div class="dashboard-header"><h3>Στατιστικά</h3><button class="close-dash-btn" onclick="hideDashboard()">✕</button></div>
+    <div class="dashboard-header"><h3>Στατιστικά</h3><button class="close-dash-btn">✕</button></div>
     <div class="dashboard-stats">
         <div class="stat-item"><span class="stat-label">Σύνολο Τίτλων:</span><span class="stat-value" id="statTotal">0</span></div>
         <div class="stat-item"><span class="stat-label">Ταινίες:</span><span class="stat-value" id="statMovies">0</span></div>
@@ -37,27 +37,27 @@
         <div class="stat-item"><span class="stat-label">Νεότερη:</span><span class="stat-value" id="statNewest">-</span></div>
     </div>
     <div class="dashboard-actions">
-        <button class="dash-btn" onclick="searchByID()" style="background:#2ecc71;color:white;">🔍 Αναζήτηση με ID</button>
-        <button class="dash-btn" onclick="showAddMovieForm()" style="background:#2ecc71;color:white;">➕ Προσθήκη Ταινίας/Σειράς</button>
-        <button class="dash-btn" onclick="openPosterEditor()">Επεξεργασία Poster</button>
-        <button class="dash-btn" onclick="addMovieByTMDBId()" style="background:#9b59b6;color:white;">🎬 Προσθήκη από TMDB ID</button>
-        <button class="dash-btn" onclick="exportToJSON()">📤 Export JSON (τρέχον)</button>
-        <button class="dash-btn" onclick="removeAllLinksAndExport()" style="background:#e67e22;color:white;">🗑️ Αφαίρεση όλων των Link & Export</button>
-        <button class="dash-btn" onclick="document.getElementById('importFile').click()">📥 Import JSON</button>
-        <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importFromJSON(event)">
-        <button class="dash-btn" onclick="showMissingPostersList()" style="background:#e67e22;color:white;">Έλεγχος Poster</button>
-        <button class="dash-btn" id="logoutBtn" style="background:#e74c3c;color:white;display:none;" onclick="logoutAdmin()">Αποσύνδεση Διαχειριστή</button>
+        <button class="dash-btn" id="searchByIdBtn" style="background:#2ecc71;color:white;">🔍 Αναζήτηση με ID</button>
+        <button class="dash-btn" id="addMovieFormBtn" style="background:#2ecc71;color:white;">➕ Προσθήκη Ταινίας/Σειράς</button>
+        <button class="dash-btn" id="posterEditorBtn">Επεξεργασία Poster</button>
+        <button class="dash-btn" id="addByTmdbBtn" style="background:#9b59b6;color:white;">🎬 Προσθήκη από TMDB ID</button>
+        <button class="dash-btn" id="exportBtn">📤 Export JSON (τρέχον)</button>
+        <button class="dash-btn" id="removeLinksBtn" style="background:#e67e22;color:white;">🗑️ Αφαίρεση όλων των Link & Export</button>
+        <button class="dash-btn" id="importBtn">📥 Import JSON</button>
+        <input type="file" id="importFile" accept=".json" style="display: none;">
+        <button class="dash-btn" id="missingPostersBtn" style="background:#e67e22;color:white;">Έλεγχος Poster</button>
+        <button class="dash-btn" id="logoutBtn" style="background:#e74c3c;color:white;display:none;">Αποσύνδεση Διαχειριστή</button>
     </div>
 </div>
 
 <div class="search-section">
     <div class="search-wrapper">
         <input type="text" id="movieSearch" placeholder="Αναζήτηση τίτλου, ηθοποιού, σκηνοθέτη...">
-        <button class="clear-search-btn hidden" id="clearSearchBtn" onclick="clearSearch()">✕</button>
+        <button class="clear-search-btn hidden" id="clearSearchBtn">✕</button>
     </div>
     <div class="filter-group">
-        <select id="genreFilter" onchange="applyFilters()"><option value="All">Όλες οι Κατηγορίες</option></select>
-        <select id="sortSelect" onchange="applyFilters()">
+        <select id="genreFilter"><option value="All">Όλες οι Κατηγορίες</option></select>
+        <select id="sortSelect">
             <option value="title">Τίτλος (Α-Ω)</option>
             <option value="idDesc">ID (Νεότερα πρώτα)</option>
             <option value="idAsc">ID (Παλαιότερα πρώτα)</option>
@@ -68,18 +68,18 @@
             <option value="qualityHD">Ποιότητα (HD/4K πρώτα)</option>
             <option value="qualitySD">Ποιότητα (SD πρώτα)</option>
         </select>
-        <select id="yearFilter" onchange="applyFilters()"><option value="All">Όλα τα έτη</option></select>
-        <select id="countryFilter" onchange="applyFilters()"><option value="All">Όλες οι Χώρες</option></select>
-        <select id="studioFilter" onchange="applyFilters()"><option value="All">Όλες οι Πλατφόρμες</option></select>
+        <select id="yearFilter"><option value="All">Όλα τα έτη</option></select>
+        <select id="countryFilter"><option value="All">Όλες οι Χώρες</option></select>
+        <select id="studioFilter"><option value="All">Όλες οι Πλατφόρμες</option></select>
     </div>
 </div>
 
 <div class="movie-grid" id="movieGrid"><div style="text-align:center;padding:50px;">Φόρτωση δεδομένων...</div></div>
-<button id="loadMoreBtn" style="display:none;" onclick="loadNextPage()">ΦΟΡΤΩΣΗ ΠΕΡΙΣΣΟΤΕΡΩΝ</button>
+<button id="loadMoreBtn" style="display:none;">ΦΟΡΤΩΣΗ ΠΕΡΙΣΣΟΤΕΡΩΝ</button>
 
-<div id="detailModal" onclick="if(event.target===this) closeDetails()">
+<div id="detailModal">
     <div class="modal-box">
-        <button class="close-modal" onclick="closeDetails()">✕</button>
+        <button class="close-modal">✕</button>
         <img id="modalImg" class="modal-poster" src="" alt="Poster">
         <div class="modal-info">
             <h2 id="modalTitle"></h2>
@@ -97,18 +97,18 @@
                     <div class="rating-count">/10</div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 10px;">
-                    <button id="modalDownloadBtn" class="download-btn-yts" style="display:none;" onclick="handleDownloadClick()">ΛΗΨΗ</button>
+                    <button id="modalDownloadBtn" class="download-btn-yts" style="display:none;">ΛΗΨΗ</button>
                     <a id="modalImdb" class="modal-icon-btn" href="#" target="_blank" style="background:#f5c518;color:#000;">IMDB</a>
                     <a id="modalTmdb" class="modal-icon-btn" href="#" target="_blank" style="background:#01b4e4;">TMDB</a>
-                    <button id="modalEditBtn" class="modal-icon-btn" onclick="editCurrentMovie()" style="display:none;">✏️ Επεξεργασία</button>
-                    <button id="modalDeleteBtn" class="modal-icon-btn danger" onclick="deleteMovieFromModal()" style="display:none;">🗑️ Διαγραφή</button>
+                    <button id="modalEditBtn" class="modal-icon-btn" style="display:none;">✏️ Επεξεργασία</button>
+                    <button id="modalDeleteBtn" class="modal-icon-btn danger" style="display:none;">🗑️ Διαγραφή</button>
                     <button id="modalAddBtn" class="modal-icon-btn" onclick="showAddMovieForm()" style="display:none; background:#2ecc71;">➕ Προσθήκη</button>
                 </div>
             </div>
             <div class="modal-description" id="modalDesc"></div>
             <div class="info-grid">
-                <div class="info-grid-item"><span class="info-grid-label">Σκηνοθεσία</span><span class="info-grid-value" id="modalDirector" style="cursor: pointer; color: var(--primary);" onclick="searchMoviesByDirector(this.innerText, 'director')">-</span></div>
-                <div class="info-grid-item"><span class="info-grid-label">Σενάριο</span><span class="info-grid-value" id="modalWriter" style="cursor: pointer; color: var(--primary);" onclick="searchMoviesByDirector(this.innerText, 'writer')">-</span></div>
+                <div class="info-grid-item"><span class="info-grid-label">Σκηνοθεσία</span><span class="info-grid-value" id="modalDirector" style="cursor: pointer; color: var(--primary);">-</span></div>
+                <div class="info-grid-item"><span class="info-grid-label">Σενάριο</span><span class="info-grid-value" id="modalWriter" style="cursor: pointer; color: var(--primary);">-</span></div>
                 <div class="info-grid-item"><span class="info-grid-label">Πλατφόρμα</span><span class="info-grid-value" id="modalStudio">-</span></div>
                 <div class="info-grid-item"><span class="info-grid-label">Ποιότητα</span><span class="info-grid-value" id="modalQualityText">-</span></div>
             </div>
@@ -120,7 +120,7 @@
     </div>
 </div>
 
-<button id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'});">↑</button>
+<button id="backToTop">↑</button>
 <div class="version-badge" id="versionBadge">Έκδοση: 1.0.0</div>
 
 <script src="config.js"></script>
