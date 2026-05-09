@@ -245,8 +245,19 @@ function isNewMovie(dateAdded, movieId) {
 async function fetchPoster(title, year, type, movieId) {
     const key = `${title}|${year}`;
     const movie = moviesData.find(m => m.id === movieId);
+    
+    // Αν υπάρχει posterOverride, χρησιμοποίησέ το
     if (movie?.posterOverride) return movie.posterOverride;
+    
+    // Έλεγχος cache
     if (posterCache.has(key)) return posterCache.get(key);
+    
+    // Έλεγχος localStorage για μόνιμο cache
+    const cachedPoster = localStorage.getItem(`poster_${key}`);
+    if (cachedPoster) {
+        posterCache.set(key, cachedPoster);
+        return cachedPoster;
+    }
     
     if (!TMDB_API_KEY) {
         const fallback = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='450' viewBox='0 0 300 450'%3E%3Crect width='300' height='450' fill='%2334495e'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='white' font-size='14'%3E${encodeURIComponent(title.substring(0,20))}%3C/text%3E%3C/svg%3E`;
@@ -262,6 +273,7 @@ async function fetchPoster(title, year, type, movieId) {
         if (data.results?.[0]?.poster_path) {
             const poster = `https://image.tmdb.org/t/p/w500${data.results[0].poster_path}`;
             posterCache.set(key, poster);
+            localStorage.setItem(`poster_${key}`, poster);
             return poster;
         }
     } catch(e) {}
