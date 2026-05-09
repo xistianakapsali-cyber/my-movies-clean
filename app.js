@@ -246,13 +246,9 @@ async function fetchPoster(title, year, type, movieId) {
     const key = `${title}|${year}`;
     const movie = moviesData.find(m => m.id === movieId);
     
-    // Αν υπάρχει posterOverride, χρησιμοποίησέ το
     if (movie?.posterOverride) return movie.posterOverride;
-    
-    // Έλεγχος cache
     if (posterCache.has(key)) return posterCache.get(key);
     
-    // Έλεγχος localStorage για μόνιμο cache
     const cachedPoster = localStorage.getItem(`poster_${key}`);
     if (cachedPoster) {
         posterCache.set(key, cachedPoster);
@@ -313,26 +309,34 @@ async function renderActorsWithImages(actorsString, containerId) {
         container.innerHTML = '<span style="opacity:0.7;">N/A</span>';
         return;
     }
-    container.innerHTML = actorNames.map(name => `
-        <div class="actor-item" data-actor="${escapeHtml(name)}" onclick="searchMoviesByActor('${escapeHtml(name).replace(/'/g, "\\'")}')">
-            <div class="actor-placeholder">🎭</div>
-            <span class="actor-name">${escapeHtml(name)}</span>
-        </div>
-    `).join('');
-    for (let i = 0; i < actorNames.length; i++) {
-        const name = actorNames[i];
+    
+    container.innerHTML = '';
+    for (const name of actorNames) {
+        const actorDiv = document.createElement('div');
+        actorDiv.className = 'actor-item';
+        actorDiv.setAttribute('data-actor', name);
+        actorDiv.addEventListener('click', () => searchMoviesByActor(name));
+        
+        const placeholder = document.createElement('div');
+        placeholder.className = 'actor-placeholder';
+        placeholder.textContent = '🎭';
+        
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'actor-name';
+        nameSpan.textContent = name;
+        
+        actorDiv.appendChild(placeholder);
+        actorDiv.appendChild(nameSpan);
+        container.appendChild(actorDiv);
+        
         const imgUrl = await fetchActorImage(name);
-        const actorDiv = container.querySelector(`.actor-item[data-actor="${escapeHtml(name).replace(/"/g, '&quot;')}"]`);
-        if (actorDiv && imgUrl) {
-            const placeholder = actorDiv.querySelector('.actor-placeholder');
-            if (placeholder) {
-                const img = document.createElement('img');
-                img.src = imgUrl;
-                img.className = 'actor-avatar';
-                img.alt = name;
-                img.onerror = () => { img.style.display = 'none'; placeholder.style.display = 'flex'; };
-                placeholder.parentNode.replaceChild(img, placeholder);
-            }
+        if (imgUrl) {
+            const img = document.createElement('img');
+            img.src = imgUrl;
+            img.className = 'actor-avatar';
+            img.alt = name;
+            img.onerror = () => { img.style.display = 'none'; placeholder.style.display = 'flex'; };
+            placeholder.parentNode.replaceChild(img, placeholder);
         }
     }
 }
@@ -346,14 +350,14 @@ function searchMoviesByActor(actorName) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function searchMoviesByDirector(writerOrDirector, type) {
+function searchMoviesByDirectorOrWriter(value, type) {
     const searchInput = document.getElementById('movieSearch');
-    searchInput.value = writerOrDirector;
+    searchInput.value = value;
     toggleClearButton();
     applyFilters();
     closeDetails();
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    showToast(`Αναζήτηση για: ${writerOrDirector}`, '#2196f3');
+    showToast(`Αναζήτηση για: ${value}`, '#2196f3');
 }
 
 // ============ LOAD MOVIES ============
@@ -381,7 +385,6 @@ async function loadMoviesData() {
         } catch(e) {}
     }
     
-    // Default data
     moviesData = [
         { "id": 1, "title": "1883", "year": 2021, "country": "United States", "genre": "Δράμα, Γουέστερν", "type": "Series", "quality": "HD", "rating": 8.7, "actors": "Sam Elliott, Tim McGraw, Faith Hill, Isabel May", "director": "Taylor Sheridan", "writer": "Taylor Sheridan", "link": "", "imdb": "", "tmdb": "", "desc": "Η ιστορία της οικογένειας Ντάτον καθώς ταξιδεύουν προς τη Δύση.", "dateAdded": new Date().toISOString().split('T')[0], "studio": "Paramount+", "createdBy": "Διαχειριστής" },
         { "id": 2, "title": "1899", "year": 2022, "country": "Germany", "genre": "Μυστηρίου, Δράμα", "type": "Series", "quality": "HD", "rating": 7.3, "actors": "Emily Beecham, Andreas Pietschmann", "director": "Baran bo Odar", "writer": "Baran bo Odar", "link": "", "imdb": "", "tmdb": "", "desc": "Μετανάστες ταξιδεύουν από την Ευρώπη στην Αμερική.", "dateAdded": new Date().toISOString().split('T')[0], "studio": "Netflix", "createdBy": "Διαχειριστής" },
@@ -526,8 +529,33 @@ async function renderMovies() {
         return; 
     }
     document.getElementById('loadMoreBtn').style.display = end >= filteredMovies.length ? 'none' : 'block';
-    grid.innerHTML = page.map(m => `<div class="movie-card" onclick="openDetails('${escapeHtml(m.title).replace(/'/g, "\\'")}')"><div class="img-container"><div class="quality-tag ${m.quality === 'SD' ? 'sd-blue' : ''}">${m.quality||'HD'}</div>${isNewMovie(m.dateAdded, m.id) ? '<div class="new-badge-poster">ΝΕΟ</div>' : ''}<img src="${LOADING_POSTER}" data-title="${escapeHtml(m.title)}" data-year="${m.year}" data-type="${m.type==='Series'?'tv':'movie'}" data-id="${m.id}" class="poster-load" loading="lazy"></div><div class="info"><h3>${escapeHtml(m.title)}</h3><div class="stars">${getStars(m.rating)} <span class="rating-number">${m.rating}</span></div><div class="play-btn">ΛΕΠΤΟΜΕΡΕΙΕΣ</div></div></div>`).join('');
-    const promises = Array.from(grid.querySelectorAll('.poster-load')).map(img => fetchPoster(img.dataset.title, img.dataset.year, img.dataset.type, parseInt(img.dataset.id)).then(p => img.src = p));
+    
+    grid.innerHTML = '';
+    for (const m of page) {
+        const card = document.createElement('div');
+        card.className = 'movie-card';
+        card.setAttribute('data-title', m.title);
+        card.addEventListener('click', () => openDetails(m.title));
+        
+        card.innerHTML = `
+            <div class="img-container">
+                <div class="quality-tag ${m.quality === 'SD' ? 'sd-blue' : ''}">${m.quality||'HD'}</div>
+                ${isNewMovie(m.dateAdded, m.id) ? '<div class="new-badge-poster">ΝΕΟ</div>' : ''}
+                <img src="${LOADING_POSTER}" data-title="${escapeHtml(m.title)}" data-year="${m.year}" data-type="${m.type==='Series'?'tv':'movie'}" data-id="${m.id}" class="poster-load" loading="lazy">
+            </div>
+            <div class="info">
+                <h3>${escapeHtml(m.title)}</h3>
+                <div class="stars">${getStars(m.rating)} <span class="rating-number">${m.rating}</span></div>
+                <div class="play-btn">ΛΕΠΤΟΜΕΡΕΙΕΣ</div>
+            </div>
+        `;
+        grid.appendChild(card);
+    }
+    
+    const promises = Array.from(grid.querySelectorAll('.poster-load')).map(img => 
+        fetchPoster(img.dataset.title, img.dataset.year, img.dataset.type, parseInt(img.dataset.id))
+            .then(p => img.src = p)
+    );
     await Promise.all(promises);
 }
 
@@ -579,8 +607,21 @@ function openDetails(title) {
     document.getElementById('modalTitle').innerHTML = escapeHtml(movie.title);
     document.getElementById('modalYear').innerHTML = movie.year;
     document.getElementById('modalDesc').innerHTML = movie.desc || 'Δεν υπάρχει περιγραφή.';
-    document.getElementById('modalDirector').innerHTML = movie.director || 'N/A';
-    document.getElementById('modalWriter').innerHTML = movie.writer || 'N/A';
+    
+    const directorEl = document.getElementById('modalDirector');
+    directorEl.innerHTML = movie.director || 'N/A';
+    directorEl.onclick = null;
+    if (movie.director && movie.director !== 'N/A') {
+        directorEl.addEventListener('click', () => searchMoviesByDirectorOrWriter(movie.director, 'director'));
+    }
+    
+    const writerEl = document.getElementById('modalWriter');
+    writerEl.innerHTML = movie.writer || 'N/A';
+    writerEl.onclick = null;
+    if (movie.writer && movie.writer !== 'N/A') {
+        writerEl.addEventListener('click', () => searchMoviesByDirectorOrWriter(movie.writer, 'writer'));
+    }
+    
     document.getElementById('modalStudio').innerHTML = movie.studio || 'Κανάλι';
     document.getElementById('modalQualityText').innerHTML = movie.quality || 'HD';
     document.getElementById('modalQualityBadge').innerHTML = `${movie.quality || 'HD'}`;
@@ -589,10 +630,15 @@ function openDetails(title) {
     document.getElementById('modalGenreBadge').innerHTML = movie.genre || 'N/A';
     document.getElementById('modalRatingValue').innerHTML = movie.rating.toFixed(1);
     document.getElementById('modalStarsBig').innerHTML = getStarsHtml(movie.rating);
-    document.getElementById('modalImdb').href = movie.imdb || '#';
-    document.getElementById('modalImdb').style.display = movie.imdb ? 'inline-flex' : 'none';
-    document.getElementById('modalTmdb').href = movie.tmdb || '#';
-    document.getElementById('modalTmdb').style.display = movie.tmdb ? 'inline-flex' : 'none';
+    
+    const imdbLink = document.getElementById('modalImdb');
+    imdbLink.href = movie.imdb || '#';
+    imdbLink.style.display = movie.imdb ? 'inline-flex' : 'none';
+    
+    const tmdbLink = document.getElementById('modalTmdb');
+    tmdbLink.href = movie.tmdb || '#';
+    tmdbLink.style.display = movie.tmdb ? 'inline-flex' : 'none';
+    
     document.getElementById('modalEditBtn').style.display = isUserLoggedIn ? 'inline-flex' : 'none';
     document.getElementById('modalDeleteBtn').style.display = isUserLoggedIn ? 'inline-flex' : 'none';
     
@@ -649,11 +695,15 @@ function showAddMovieForm() {
         return; 
     }
     
-    const modalHtml = `<div class="add-movie-modal" id="addMovieModal"><h2>➕ Προσθήκη Νέας Ταινίας/Σειράς</h2><div class="auto-fill-row" style="display: flex; gap: 10px; margin-bottom: 15px;"><input type="text" id="autoTitle" placeholder="Τίτλος για αυτόματη συμπλήρωση (π.χ. Salt, Inception)" style="flex: 1;"><button onclick="searchTMDB()" class="btn-tmdb">🔍 Αναζήτηση στο TMDB</button></div><div id="searchResults" class="results-list" style="display: none; max-height: 200px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 15px;"></div><div style="margin: 15px 0; text-align: center; font-size: 12px; opacity: 0.7;">— ή συμπλήρωσε χειροκίνητα —</div><div class="form-row"><div class="form-group"><label>Τίτλος *</label><input type="text" id="newTitle" placeholder="Ο τίτλος της ταινίας/σειράς"></div><div class="form-group"><label>Έτος *</label><input type="number" id="newYear" placeholder="π.χ. 2024"></div></div><div class="form-row"><div class="form-group"><label>Τύπος</label><select id="newType"><option value="Movie">Ταινία (Movie)</option><option value="Series">Σειρά (Series)</option></select></div><div class="form-group"><label>Ποιότητα</label><select id="newQuality"><option value="HD">HD</option><option value="SD">SD</option><option value="4K">4K</option></select></div></div><div class="form-row"><div class="form-group"><label>Χώρα</label><input type="text" id="newCountry" placeholder="π.χ. United States, Greece"></div><div class="form-group"><label>Είδος (Genre)</label><input type="text" id="newGenre" placeholder="π.χ. Δράμα, Θρίλερ"></div></div><div class="form-row"><div class="form-group"><label>Βαθμολογία (0-10)</label><input type="number" step="0.1" id="newRating" placeholder="π.χ. 8.5"></div><div class="form-group"><label>Πλατφόρμα (Studio)</label><input type="text" id="newStudio" placeholder="π.χ. Netflix, Disney+"></div></div><div class="form-group"><label>Σκηνοθέτης</label><input type="text" id="newDirector" placeholder="Ονόματα σκηνοθετών"></div><div class="form-group"><label>Σεναριογράφος</label><input type="text" id="newWriter" placeholder="Ονόματα σεναριογράφων"></div><div class="form-group"><label>Ηθοποιοί</label><input type="text" id="newActors" placeholder="Ονόματα ηθοποιών (διαχώρισε με κόμματα)"></div><div class="form-group"><label>Link Προβολής</label><input type="url" id="newLink" placeholder="https://..."></div><div class="form-row"><div class="form-group"><label>IMDB Link</label><input type="url" id="newImdb" placeholder="https://www.imdb.com/..."></div><div class="form-group"><label>TMDB Link</label><input type="url" id="newTmdb" placeholder="https://www.themoviedb.org/..."></div></div><div class="form-group"><label>Περιγραφή</label><textarea id="newDesc" rows="3" placeholder="Περιγραφή της ταινίας/σειράς..."></textarea></div><div class="modal-buttons"><button onclick="saveNewMovie()" class="btn-save">💾 Αποθήκευση</button><button onclick="closeAddMovieForm()" class="btn-cancel">❌ Ακύρωση</button></div></div>`;
+    const modalHtml = `<div class="add-movie-modal" id="addMovieModal"><h2>➕ Προσθήκη Νέας Ταινίας/Σειράς</h2><div class="auto-fill-row" style="display: flex; gap: 10px; margin-bottom: 15px;"><input type="text" id="autoTitle" placeholder="Τίτλος για αυτόματη συμπλήρωση (π.χ. Salt, Inception)" style="flex: 1;"><button id="searchTmdbBtn" class="btn-tmdb">🔍 Αναζήτηση στο TMDB</button></div><div id="searchResults" class="results-list" style="display: none; max-height: 200px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 15px;"></div><div style="margin: 15px 0; text-align: center; font-size: 12px; opacity: 0.7;">— ή συμπλήρωσε χειροκίνητα —</div><div class="form-row"><div class="form-group"><label>Τίτλος *</label><input type="text" id="newTitle" placeholder="Ο τίτλος της ταινίας/σειράς"></div><div class="form-group"><label>Έτος *</label><input type="number" id="newYear" placeholder="π.χ. 2024"></div></div><div class="form-row"><div class="form-group"><label>Τύπος</label><select id="newType"><option value="Movie">Ταινία (Movie)</option><option value="Series">Σειρά (Series)</option></select></div><div class="form-group"><label>Ποιότητα</label><select id="newQuality"><option value="HD">HD</option><option value="SD">SD</option><option value="4K">4K</option></select></div></div><div class="form-row"><div class="form-group"><label>Χώρα</label><input type="text" id="newCountry" placeholder="π.χ. United States, Greece"></div><div class="form-group"><label>Είδος (Genre)</label><input type="text" id="newGenre" placeholder="π.χ. Δράμα, Θρίλερ"></div></div><div class="form-row"><div class="form-group"><label>Βαθμολογία (0-10)</label><input type="number" step="0.1" id="newRating" placeholder="π.χ. 8.5"></div><div class="form-group"><label>Πλατφόρμα (Studio)</label><input type="text" id="newStudio" placeholder="π.χ. Netflix, Disney+"></div></div><div class="form-group"><label>Σκηνοθέτης</label><input type="text" id="newDirector" placeholder="Ονόματα σκηνοθετών"></div><div class="form-group"><label>Σεναριογράφος</label><input type="text" id="newWriter" placeholder="Ονόματα σεναριογράφων"></div><div class="form-group"><label>Ηθοποιοί</label><input type="text" id="newActors" placeholder="Ονόματα ηθοποιών (διαχώρισε με κόμματα)"></div><div class="form-group"><label>Link Προβολής</label><input type="url" id="newLink" placeholder="https://..."></div><div class="form-row"><div class="form-group"><label>IMDB Link</label><input type="url" id="newImdb" placeholder="https://www.imdb.com/..."></div><div class="form-group"><label>TMDB Link</label><input type="url" id="newTmdb" placeholder="https://www.themoviedb.org/..."></div></div><div class="form-group"><label>Περιγραφή</label><textarea id="newDesc" rows="3" placeholder="Περιγραφή της ταινίας/σειράς..."></textarea></div><div class="modal-buttons"><button id="saveMovieBtn" class="btn-save">💾 Αποθήκευση</button><button id="cancelAddMovieBtn" class="btn-cancel">❌ Ακύρωση</button></div></div>`;
     
     const existing = document.getElementById('addMovieModal');
     if (existing) existing.remove();
     document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    document.getElementById('searchTmdbBtn').addEventListener('click', () => searchTMDB());
+    document.getElementById('saveMovieBtn').addEventListener('click', () => saveNewMovie());
+    document.getElementById('cancelAddMovieBtn').addEventListener('click', () => closeAddMovieForm());
 }
 
 function closeAddMovieForm() { 
@@ -682,18 +732,23 @@ async function searchTMDB() {
         const data = await res.json();
         const resultsDiv = document.getElementById('searchResults');
         if (data.results && data.results.length > 0) {
-            resultsDiv.innerHTML = `<div style="padding:10px;background:var(--primary);color:white;font-weight:bold;border-radius:8px 8px 0 0;">📽️ Αποτελέσματα (${data.results.length})</div>` + data.results.slice(0, 8).map((r, idx) => {
+            resultsDiv.innerHTML = `<div style="padding:10px;background:var(--primary);color:white;font-weight:bold;border-radius:8px 8px 0 0;">📽️ Αποτελέσματα (${data.results.length})</div>`;
+            for (let i = 0; i < Math.min(8, data.results.length); i++) {
+                const r = data.results[i];
                 const year = (r.release_date || '').substring(0, 4) || 'Άγνωστο';
-                return `<div class="result-item" data-id="${r.id}" data-title="${r.title.replace(/'/g, "\\'").replace(/"/g, '&quot;')}" data-year="${year}" data-poster="${r.poster_path || ''}" style="padding:12px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.2s;"><strong>🎬 ${r.title}</strong> <span style="opacity:0.7;">(${year})</span></div>`;
-            }).join('');
-            const items = resultsDiv.querySelectorAll('.result-item');
-            items.forEach(item => {
-                item.addEventListener('click', function(e) {
-                    selectTMDBResult(this.dataset.id, this.dataset.title, this.dataset.year, this.dataset.poster);
-                });
-                item.addEventListener('mouseenter', function() { this.style.background = 'var(--primary)'; this.style.color = 'white'; });
-                item.addEventListener('mouseleave', function() { this.style.background = ''; this.style.color = ''; });
-            });
+                const resultItem = document.createElement('div');
+                resultItem.className = 'result-item';
+                resultItem.setAttribute('data-id', r.id);
+                resultItem.setAttribute('data-title', r.title.replace(/'/g, "\\'").replace(/"/g, '&quot;'));
+                resultItem.setAttribute('data-year', year);
+                resultItem.setAttribute('data-poster', r.poster_path || '');
+                resultItem.style.cssText = 'padding:12px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.2s;';
+                resultItem.innerHTML = `<strong>🎬 ${r.title}</strong> <span style="opacity:0.7;">(${year})</span>`;
+                resultItem.addEventListener('click', () => selectTMDBResult(r.id, r.title, year, r.poster_path));
+                resultItem.addEventListener('mouseenter', () => { resultItem.style.background = 'var(--primary)'; resultItem.style.color = 'white'; });
+                resultItem.addEventListener('mouseleave', () => { resultItem.style.background = ''; resultItem.style.color = ''; });
+                resultsDiv.appendChild(resultItem);
+            }
             resultsDiv.style.display = 'block';
         } else {
             resultsDiv.innerHTML = '<div style="padding:15px;text-align:center;">❌ Δεν βρέθηκαν αποτελέσματα</div>';
@@ -811,10 +866,12 @@ function editCurrentMovie() {
     if (!movie) return;
     currentEditingMovieId = movie.id;
     closeDetails();
-    const modalHtml = `<div class="edit-movie-modal" id="editMovieModal"><h2>✏️ Επεξεργασία: ${escapeHtml(movie.title)}</h2><div class="form-row"><div class="form-group"><label>Τίτλος</label><input type="text" id="editTitle" value="${escapeHtml(movie.title)}"></div><div class="form-group"><label>Έτος</label><input type="number" id="editYear" value="${movie.year}"></div></div><div class="form-row"><div class="form-group"><label>Τύπος</label><select id="editType"><option value="Movie" ${movie.type==='Movie'?'selected':''}>Ταινία</option><option value="Series" ${movie.type==='Series'?'selected':''}>Σειρά</option></select></div><div class="form-group"><label>Ποιότητα</label><select id="editQuality"><option ${movie.quality==='HD'?'selected':''}>HD</option><option ${movie.quality==='SD'?'selected':''}>SD</option><option ${movie.quality==='4K'?'selected':''}>4K</option></select></div></div><div class="form-group"><label>Ηθοποιοί</label><input type="text" id="editActors" value="${escapeHtml(movie.actors||'')}"></div><div class="form-group"><label>Link Προβολής</label><input type="url" id="editLink" value="${escapeHtml(movie.link||'')}" placeholder="https://..."></div><div class="modal-buttons"><button onclick="saveEditedMovie()" class="btn-save">💾 Αποθήκευση</button><button onclick="closeEditForm()" class="btn-cancel">❌ Ακύρωση</button></div></div>`;
+    const modalHtml = `<div class="edit-movie-modal" id="editMovieModal"><h2>✏️ Επεξεργασία: ${escapeHtml(movie.title)}</h2><div class="form-row"><div class="form-group"><label>Τίτλος</label><input type="text" id="editTitle" value="${escapeHtml(movie.title)}"></div><div class="form-group"><label>Έτος</label><input type="number" id="editYear" value="${movie.year}"></div></div><div class="form-row"><div class="form-group"><label>Τύπος</label><select id="editType"><option value="Movie" ${movie.type==='Movie'?'selected':''}>Ταινία</option><option value="Series" ${movie.type==='Series'?'selected':''}>Σειρά</option></select></div><div class="form-group"><label>Ποιότητα</label><select id="editQuality"><option ${movie.quality==='HD'?'selected':''}>HD</option><option ${movie.quality==='SD'?'selected':''}>SD</option><option ${movie.quality==='4K'?'selected':''}>4K</option></select></div></div><div class="form-group"><label>Ηθοποιοί</label><input type="text" id="editActors" value="${escapeHtml(movie.actors||'')}"></div><div class="form-group"><label>Link Προβολής</label><input type="url" id="editLink" value="${escapeHtml(movie.link||'')}" placeholder="https://..."></div><div class="modal-buttons"><button id="saveEditBtn" class="btn-save">💾 Αποθήκευση</button><button id="cancelEditBtn" class="btn-cancel">❌ Ακύρωση</button></div></div>`;
     const existing = document.getElementById('editMovieModal');
     if (existing) existing.remove();
     document.body.insertAdjacentHTML('beforeend', modalHtml);
+    document.getElementById('saveEditBtn').addEventListener('click', () => saveEditedMovie());
+    document.getElementById('cancelEditBtn').addEventListener('click', () => closeEditForm());
 }
 
 function closeEditForm() { document.getElementById('editMovieModal')?.remove(); currentEditingMovieId = null; }
@@ -946,6 +1003,138 @@ function showMissingPostersList() { alert('Λειτουργία ελέγχου p
 function searchByID() { const id = prompt('ID:'); const movie = moviesData.find(m => m.id == id); if(movie) openDetails(movie.title); else showToast('Δεν βρέθηκε', '#e50914'); }
 function loadDashboardState() { const auth = AdminAuth.isSessionValid(); const visible = localStorage.getItem('dashboardVisible') === 'true'; if (auth && visible) showDashboard(); else hideDashboard(); }
 
+// ============ EVENT LISTENERS (αντί για inline onclick) ============
+function attachEventListeners() {
+    // Logo
+    const logo = document.querySelector('.logo');
+    if (logo) logo.addEventListener('click', () => resetAllFilters());
+    
+    // Theme button
+    const themeBtn = document.querySelector('.theme-btn');
+    if (themeBtn) themeBtn.addEventListener('click', () => toggleTheme());
+    
+    // Filter buttons
+    document.querySelectorAll('.filter-type-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const type = e.target.dataset.type;
+            handleAllClick();
+            filterByType(type);
+        });
+    });
+    
+    // Login button
+    const loginBtn = document.getElementById('loginUserBtn');
+    if (loginBtn) loginBtn.addEventListener('click', () => showUserLogin());
+    
+    // Logout button
+    const logoutBtn = document.getElementById('logoutUserBtn');
+    if (logoutBtn) logoutBtn.addEventListener('click', () => logoutUser());
+    
+    // Update button
+    const updateBtn = document.querySelector('.update-btn-header');
+    if (updateBtn) updateBtn.addEventListener('click', () => checkForGitHubUpdates());
+    
+    // Dashboard close button
+    const closeDashBtn = document.querySelector('.close-dash-btn');
+    if (closeDashBtn) closeDashBtn.addEventListener('click', () => hideDashboard());
+    
+    // Dashboard action buttons
+    const searchByIdBtn = document.querySelector('.dash-btn[onclick="searchByID()"]');
+    if (searchByIdBtn) searchByIdBtn.addEventListener('click', () => searchByID());
+    
+    const addMovieBtn = document.querySelector('.dash-btn[onclick="showAddMovieForm()"]');
+    if (addMovieBtn) addMovieBtn.addEventListener('click', () => showAddMovieForm());
+    
+    const posterEditorBtn = document.querySelector('.dash-btn[onclick="openPosterEditor()"]');
+    if (posterEditorBtn) posterEditorBtn.addEventListener('click', () => openPosterEditor());
+    
+    const tmdbBtn = document.querySelector('.dash-btn[onclick="addMovieByTMDBId()"]');
+    if (tmdbBtn) tmdbBtn.addEventListener('click', () => addMovieByTMDBId());
+    
+    const exportBtn = document.querySelector('.dash-btn[onclick="exportToJSON()"]');
+    if (exportBtn) exportBtn.addEventListener('click', () => exportToJSON());
+    
+    const removeLinksBtn = document.querySelector('.dash-btn[onclick="removeAllLinksAndExport()"]');
+    if (removeLinksBtn) removeLinksBtn.addEventListener('click', () => removeAllLinksAndExport());
+    
+    const importBtn = document.querySelector('.dash-btn[onclick="document.getElementById(\'importFile\').click()"]');
+    if (importBtn) importBtn.addEventListener('click', () => document.getElementById('importFile').click());
+    
+    const missingPostersBtn = document.querySelector('.dash-btn[onclick="showMissingPostersList()"]');
+    if (missingPostersBtn) missingPostersBtn.addEventListener('click', () => showMissingPostersList());
+    
+    const logoutAdminBtn = document.getElementById('logoutBtn');
+    if (logoutAdminBtn) logoutAdminBtn.addEventListener('click', () => logoutAdmin());
+    
+    // Clear search button
+    const clearSearchBtn = document.getElementById('clearSearchBtn');
+    if (clearSearchBtn) clearSearchBtn.addEventListener('click', () => clearSearch());
+    
+    // Load more button
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    if (loadMoreBtn) loadMoreBtn.addEventListener('click', () => loadNextPage());
+    
+    // Back to top button
+    const backToTopBtn = document.getElementById('backToTop');
+    if (backToTopBtn) backToTopBtn.addEventListener('click', () => window.scrollTo({top: 0, behavior: 'smooth'}));
+    
+    // Search input
+    const searchInput = document.getElementById('movieSearch');
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            toggleClearButton();
+            applyFilters();
+        });
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') applyFilters();
+        });
+    }
+    
+    // Modal close
+    const modal = document.getElementById('detailModal');
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeDetails();
+        });
+    }
+    
+    const closeModalBtn = document.querySelector('.close-modal');
+    if (closeModalBtn) closeModalBtn.addEventListener('click', () => closeDetails());
+    
+    // File import
+    const importFile = document.getElementById('importFile');
+    if (importFile) importFile.addEventListener('change', (e) => importFromJSON(e));
+    
+    // Filter selects
+    const genreFilter = document.getElementById('genreFilter');
+    if (genreFilter) genreFilter.addEventListener('change', () => applyFilters());
+    
+    const sortSelect = document.getElementById('sortSelect');
+    if (sortSelect) sortSelect.addEventListener('change', () => applyFilters());
+    
+    const yearFilter = document.getElementById('yearFilter');
+    if (yearFilter) yearFilter.addEventListener('change', () => applyFilters());
+    
+    const countryFilter = document.getElementById('countryFilter');
+    if (countryFilter) countryFilter.addEventListener('change', () => applyFilters());
+    
+    const studioFilter = document.getElementById('studioFilter');
+    if (studioFilter) studioFilter.addEventListener('change', () => applyFilters());
+    
+    // Modal buttons
+    const modalDownloadBtn = document.getElementById('modalDownloadBtn');
+    if (modalDownloadBtn) modalDownloadBtn.addEventListener('click', () => handleDownloadClick());
+    
+    const modalEditBtn = document.getElementById('modalEditBtn');
+    if (modalEditBtn) modalEditBtn.addEventListener('click', () => editCurrentMovie());
+    
+    const modalDeleteBtn = document.getElementById('modalDeleteBtn');
+    if (modalDeleteBtn) modalDeleteBtn.addEventListener('click', () => deleteMovieFromModal());
+    
+    const modalAddBtn = document.getElementById('modalAddBtn');
+    if (modalAddBtn) modalAddBtn.addEventListener('click', () => showAddMovieForm());
+}
+
 // ============ INITIALIZATION ============
 window.addEventListener('DOMContentLoaded', async () => {
     if (!initConfig()) { showToast('⚠️ Σφάλμα: Δεν βρέθηκε το config.js!', '#e50914'); }
@@ -953,11 +1142,18 @@ window.addEventListener('DOMContentLoaded', async () => {
     await loadMoviesData();
     loadDashboardState();
     loadUserSession();
+    
+    // Event listeners (αντί για inline onclick)
+    attachEventListeners();
+    
     setTimeout(() => checkForGitHubUpdates(), 3000);
-    const searchInput = document.getElementById('movieSearch');
-    searchInput.addEventListener('input', () => { toggleClearButton(); applyFilters(); });
-    searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') applyFilters(); });
+    
     const backBtn = document.getElementById('backToTop');
-    window.addEventListener('scroll', () => { backBtn.style.display = window.scrollY > 300 ? 'block' : 'none'; });
-    document.addEventListener('keydown', e => { if(e.key === 'Escape') closeDetails(); });
+    window.addEventListener('scroll', () => { 
+        backBtn.style.display = window.scrollY > 300 ? 'block' : 'none'; 
+    });
+    
+    document.addEventListener('keydown', e => { 
+        if(e.key === 'Escape') closeDetails(); 
+    });
 });
