@@ -232,13 +232,12 @@ const posterCache = new Map();
 const actorImageCache = new Map();
 let recentMovieIds = [];
 
-// ✅ ΔΙΟΡΘΩΜΕΝΗ ΣΥΝΑΡΤΗΣΗ - το bug fix είναι εδώ!
 function updateRecentMoviesList() {
     if (!moviesData || moviesData.length === 0) return;
-    // ✅ ΣΩΣΤΟ - spread operator με τρεις τελείες
     const sortedByDate = [...moviesData].sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
     recentMovieIds = sortedByDate.slice(0, 10).map(m => m.id);
 }
+
 function isNewMovie(dateAdded, movieId) {
     if (!dateAdded || !movieId) return false;
     return recentMovieIds.includes(movieId);
@@ -536,8 +535,8 @@ async function renderMovies() {
     for (const m of page) {
         const card = document.createElement('div');
         card.className = 'movie-card';
-        card.setAttribute('data-title', m.title);
-        card.addEventListener('click', () => openDetails(m.title));
+        card.setAttribute('data-id', m.id);
+        card.addEventListener('click', () => openDetailsById(m.id));  // ✅ ΑΛΛΑΓΗ: με ID
         
         card.innerHTML = `
             <div class="img-container">
@@ -600,9 +599,14 @@ function updateDashboard() {
 }
 
 // ============ MODAL FUNCTIONS ============
-function openDetails(title) {
-    const movie = moviesData.find(m => m.title === title);
-    if (!movie) return;
+
+// ✅ ΝΕΑ ΣΥΝΑΡΤΗΣΗ - ΑΝΑΖΗΤΗΣΗ ΜΕ ID
+function openDetailsById(id) {
+    const movie = moviesData.find(m => m.id === id);
+    if (!movie) {
+        showToast('Σφάλμα: Δεν βρέθηκε η ταινία', '#e50914');
+        return;
+    }
     currentModalMovieId = movie.id;
     currentMovieLink = movie.link;
     document.getElementById('modalAddBtn').style.display = isUserLoggedIn ? 'inline-flex' : 'none';
@@ -656,6 +660,13 @@ function openDetails(title) {
     fetchPoster(movie.title, movie.year, movie.type === 'Series' ? 'tv' : 'movie', movie.id).then(p => modalImg.src = p);
     renderActorsWithImages(movie.actors, 'modalActorsContainer');
     document.getElementById('detailModal').style.display = 'flex';
+}
+
+// Παλιά openDetails (κρατιέται για συμβατότητα αλλά δεν χρησιμοποιείται)
+function openDetails(title) {
+    const movie = moviesData.find(m => m.title === title);
+    if (!movie) return;
+    openDetailsById(movie.id);
 }
 
 function closeDetails() { 
@@ -876,7 +887,29 @@ function editCurrentMovie() {
     if (!movie) return;
     currentEditingMovieId = movie.id;
     closeDetails();
-    const modalHtml = `<div class="edit-movie-modal" id="editMovieModal"><h2>✏️ Επεξεργασία: ${escapeHtml(movie.title)}</h2><div class="form-row"><div class="form-group"><label>Τίτλος</label><input type="text" id="editTitle" value="${escapeHtml(movie.title)}"></div><div class="form-group"><label>Έτος</label><input type="number" id="editYear" value="${movie.year}"></div></div><div class="form-row"><div class="form-group"><label>Τύπος</label><select id="editType"><option value="Movie" ${movie.type==='Movie'?'selected':''}>Ταινία</option><option value="Series" ${movie.type==='Series'?'selected':''}>Σειρά</option></select></div><div class="form-group"><label>Ποιότητα</label><select id="editQuality"><option ${movie.quality==='HD'?'selected':''}>HD</option><option ${movie.quality==='SD'?'selected':''}>SD</option><option ${movie.quality==='4K'?'selected':''}>4K</option></select></div></div><div class="form-group"><label>Ηθοποιοί</label><input type="text" id="editActors" value="${escapeHtml(movie.actors||'')}"></div><div class="form-group"><label>Link Προβολής</label><input type="url" id="editLink" value="${escapeHtml(movie.link||'')}" placeholder="https://..."></div><div class="modal-buttons"><button id="saveEditBtn" class="btn-save">💾 Αποθήκευση</button><button id="cancelEditBtn" class="btn-cancel">❌ Ακύρωση</button></div></div>`;
+    const modalHtml = `<div class="edit-movie-modal" id="editMovieModal"><h2>✏️ Επεξεργασία: ${escapeHtml(movie.title)}</h2>
+        <div class="form-row">
+            <div class="form-group"><label>Τίτλος</label><input type="text" id="editTitle" value="${escapeHtml(movie.title)}"></div>
+            <div class="form-group"><label>Έτος</label><input type="number" id="editYear" value="${movie.year}"></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label>Τύπος</label><select id="editType">
+                <option value="Movie" ${movie.type==='Movie'?'selected':''}>Ταινία</option>
+                <option value="Series" ${movie.type==='Series'?'selected':''}>Σειρά</option>
+            </select></div>
+            <div class="form-group"><label>Ποιότητα</label><select id="editQuality">
+                <option ${movie.quality==='HD'?'selected':''}>HD</option>
+                <option ${movie.quality==='SD'?'selected':''}>SD</option>
+                <option ${movie.quality==='4K'?'selected':''}>4K</option>
+            </select></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label>Βαθμολογία (0-10)</label><input type="number" step="0.1" id="editRating" value="${movie.rating}"></div>
+            <div class="form-group"><label>Ηθοποιοί</label><input type="text" id="editActors" value="${escapeHtml(movie.actors||'')}"></div>
+        </div>
+        <div class="form-group"><label>Link Προβολής</label><input type="url" id="editLink" value="${escapeHtml(movie.link||'')}" placeholder="https://..."></div>
+        <div class="modal-buttons"><button id="saveEditBtn" class="btn-save">💾 Αποθήκευση</button><button id="cancelEditBtn" class="btn-cancel">❌ Ακύρωση</button></div>
+    </div>`;
     const existing = document.getElementById('editMovieModal');
     if (existing) existing.remove();
     document.body.insertAdjacentHTML('beforeend', modalHtml);
@@ -891,8 +924,18 @@ function saveEditedMovie() {
     if (idx === -1) return;
     const title = document.getElementById('editTitle').value.trim();
     const year = parseInt(document.getElementById('editYear').value);
+    const rating = parseFloat(document.getElementById('editRating').value) || 0;
     if (isDuplicateMovie(title, year, currentEditingMovieId)) { showToast('Υπάρχει ήδη!', '#e50914'); return; }
-    moviesData[idx] = { ...moviesData[idx], title, year, type: document.getElementById('editType').value, quality: document.getElementById('editQuality').value, actors: document.getElementById('editActors').value || 'N/A', link: document.getElementById('editLink').value || '' };
+    moviesData[idx] = { 
+        ...moviesData[idx], 
+        title, 
+        year, 
+        type: document.getElementById('editType').value, 
+        quality: document.getElementById('editQuality').value, 
+        rating,
+        actors: document.getElementById('editActors').value || 'N/A', 
+        link: document.getElementById('editLink').value || '' 
+    };
     saveToLocalStorage();
     posterCache.clear();
     actorImageCache.clear();
@@ -901,7 +944,7 @@ function saveEditedMovie() {
     applyFilters();
     closeEditForm();
     showToast('✅ Αποθηκεύτηκε', '#2ecc71');
-    setTimeout(() => openDetails(title), 300);
+    setTimeout(() => openDetailsById(moviesData[idx].id), 300);
 }
 
 function deleteMovieById(id) {
@@ -1010,20 +1053,17 @@ function removeAllLinksAndExport() {
 }
 
 function showMissingPostersList() { alert('Λειτουργία ελέγχου poster - Όλα καλά!'); }
-function searchByID() { const id = prompt('ID:'); const movie = moviesData.find(m => m.id == id); if(movie) openDetails(movie.title); else showToast('Δεν βρέθηκε', '#e50914'); }
+function searchByID() { const id = prompt('ID:'); const movie = moviesData.find(m => m.id == id); if(movie) openDetailsById(movie.id); else showToast('Δεν βρέθηκε', '#e50914'); }
 function loadDashboardState() { const auth = AdminAuth.isSessionValid(); const visible = localStorage.getItem('dashboardVisible') === 'true'; if (auth && visible) showDashboard(); else hideDashboard(); }
 
 // ============ EVENT LISTENERS ============
 function attachEventListeners() {
-    // Logo
     const logo = document.querySelector('.logo');
     if (logo) logo.addEventListener('click', () => resetAllFilters());
     
-    // Theme button
     const themeBtn = document.querySelector('.theme-btn');
     if (themeBtn) themeBtn.addEventListener('click', () => toggleTheme());
     
-    // Filter buttons
     document.querySelectorAll('.filter-type-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const type = e.target.dataset.type;
@@ -1032,23 +1072,18 @@ function attachEventListeners() {
         });
     });
     
-    // Login button
     const loginBtn = document.getElementById('loginUserBtn');
     if (loginBtn) loginBtn.addEventListener('click', () => showUserLogin());
     
-    // Logout button
     const logoutUserBtn = document.getElementById('logoutUserBtn');
     if (logoutUserBtn) logoutUserBtn.addEventListener('click', () => logoutUser());
     
-    // Update button
     const updateBtn = document.querySelector('.update-btn-header');
     if (updateBtn) updateBtn.addEventListener('click', () => checkForGitHubUpdates());
     
-    // Dashboard close button
     const closeDashBtn = document.querySelector('.close-dash-btn');
     if (closeDashBtn) closeDashBtn.addEventListener('click', () => hideDashboard());
     
-    // Dashboard action buttons
     const searchByIdBtn = document.getElementById('searchByIdBtn');
     if (searchByIdBtn) searchByIdBtn.addEventListener('click', () => searchByID());
     
@@ -1076,19 +1111,15 @@ function attachEventListeners() {
     const logoutAdminBtn = document.getElementById('logoutBtn');
     if (logoutAdminBtn) logoutAdminBtn.addEventListener('click', () => logoutAdmin());
     
-    // Clear search button
     const clearSearchBtn = document.getElementById('clearSearchBtn');
     if (clearSearchBtn) clearSearchBtn.addEventListener('click', () => clearSearch());
     
-    // Load more button
     const loadMoreBtn = document.getElementById('loadMoreBtn');
     if (loadMoreBtn) loadMoreBtn.addEventListener('click', () => loadNextPage());
     
-    // Back to top button
     const backToTopBtn = document.getElementById('backToTop');
     if (backToTopBtn) backToTopBtn.addEventListener('click', () => window.scrollTo({top: 0, behavior: 'smooth'}));
     
-    // Search input
     const searchInput = document.getElementById('movieSearch');
     if (searchInput) {
         searchInput.addEventListener('input', () => {
@@ -1100,7 +1131,6 @@ function attachEventListeners() {
         });
     }
     
-    // Modal close
     const modal = document.getElementById('detailModal');
     if (modal) {
         modal.addEventListener('click', (e) => {
@@ -1111,11 +1141,9 @@ function attachEventListeners() {
     const closeModalBtn = document.querySelector('.close-modal');
     if (closeModalBtn) closeModalBtn.addEventListener('click', () => closeDetails());
     
-    // File import
     const importFile = document.getElementById('importFile');
     if (importFile) importFile.addEventListener('change', (e) => importFromJSON(e));
     
-    // Filter selects
     const genreFilter = document.getElementById('genreFilter');
     if (genreFilter) genreFilter.addEventListener('change', () => applyFilters());
     
@@ -1131,7 +1159,6 @@ function attachEventListeners() {
     const studioFilter = document.getElementById('studioFilter');
     if (studioFilter) studioFilter.addEventListener('change', () => applyFilters());
     
-    // Modal buttons
     const modalDownloadBtn = document.getElementById('modalDownloadBtn');
     if (modalDownloadBtn) modalDownloadBtn.addEventListener('click', () => handleDownloadClick());
     
@@ -1144,7 +1171,6 @@ function attachEventListeners() {
     const modalAddBtn = document.getElementById('modalAddBtn');
     if (modalAddBtn) modalAddBtn.addEventListener('click', () => showAddMovieForm());
     
-    // Director and Writer clicks (modal)
     const modalDirector = document.getElementById('modalDirector');
     if (modalDirector) {
         modalDirector.addEventListener('click', (e) => {
@@ -1173,16 +1199,12 @@ window.addEventListener('DOMContentLoaded', async () => {
     await loadMoviesData();
     loadDashboardState();
     loadUserSession();
-    
     attachEventListeners();
-    
     setTimeout(() => checkForGitHubUpdates(), 3000);
-    
     const backBtn = document.getElementById('backToTop');
     window.addEventListener('scroll', () => { 
         backBtn.style.display = window.scrollY > 300 ? 'block' : 'none'; 
     });
-    
     document.addEventListener('keydown', e => { 
         if(e.key === 'Escape') closeDetails(); 
     });
