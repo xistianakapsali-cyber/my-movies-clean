@@ -153,7 +153,7 @@ const AdminAuth = {
 let allClickCount = 0;
 let allClickTimer = null;
 
-async function handleAllClick() {
+function handleAllClick() {
     allClickCount++;
     const allBtn = document.getElementById('allMoviesBtn');
     if (allBtn) {
@@ -165,13 +165,14 @@ async function handleAllClick() {
         allClickCount = 0;
         const password = prompt('🔐 Εισάγετε κωδικό διαχειριστή για εμφάνιση dashboard:');
         if (password) {
-            const hashed = await hashPassword(password);
-            if (CONFIG && hashed === CONFIG.admin_dashboard_hash) {
-                AdminAuth.startSession();
-                showDashboard();
-            } else {
-                showToast('Λάθος κωδικός!', '#e50914');
-            }
+            hashPassword(password).then(hashed => {
+                if (CONFIG && hashed === CONFIG.admin_dashboard_hash) {
+                    AdminAuth.startSession();
+                    showDashboard();
+                } else {
+                    showToast('Λάθος κωδικός!', '#e50914');
+                }
+            });
         }
     }
     allClickTimer = setTimeout(() => { allClickCount = 0; }, 2000);
@@ -386,7 +387,7 @@ async function loadMoviesData() {
     }
     
     moviesData = [
-        { "id": 1, "title": "1883", "year": 2021, "country": "United States", "genre": "Δράμα, Γουέστερν", "type": "Series", "quality": "HD", "rating": 8.7, "actors": "Sam Elliott, Tim McGraw, Faith Hill, Isabel May", "director": "Taylor Sheridan", "writer": "Taylor Sheridan", "link": "", "imdb": "", "tmdb": "", "desc": "Η ιστορία της οικογένειας Ντάτον καθώς ταξιδεύουν προς τη Δύση.", "dateAdded": new Date().toISOString().split('T')[0], "studio": "Paramount+", "createdBy": "Διαχειριστής" },
+        { "id": 1, "title": "1883", "year": 2021, "country": "United States", "genre": "Δράμα, Γουέστερн", "type": "Series", "quality": "HD", "rating": 8.7, "actors": "Sam Elliott, Tim McGraw, Faith Hill, Isabel May", "director": "Taylor Sheridan", "writer": "Taylor Sheridan", "link": "", "imdb": "", "tmdb": "", "desc": "Η ιστορία της οικογένειας Ντάτον καθώς ταξιδεύουν προς τη Δύση.", "dateAdded": new Date().toISOString().split('T')[0], "studio": "Paramount+", "createdBy": "Διαχειριστής" },
         { "id": 2, "title": "1899", "year": 2022, "country": "Germany", "genre": "Μυστηρίου, Δράμα", "type": "Series", "quality": "HD", "rating": 7.3, "actors": "Emily Beecham, Andreas Pietschmann", "director": "Baran bo Odar", "writer": "Baran bo Odar", "link": "", "imdb": "", "tmdb": "", "desc": "Μετανάστες ταξιδεύουν από την Ευρώπη στην Αμερική.", "dateAdded": new Date().toISOString().split('T')[0], "studio": "Netflix", "createdBy": "Διαχειριστής" },
         { "id": 3, "title": "1923", "year": 2022, "country": "United States", "genre": "Δράμα, Γουέστερν", "type": "Series", "quality": "HD", "rating": 8.3, "actors": "Harrison Ford, Helen Mirren", "director": "Taylor Sheridan", "writer": "Taylor Sheridan", "link": "", "imdb": "", "tmdb": "", "desc": "Η συνέχεια του 1883.", "dateAdded": new Date().toISOString().split('T')[0], "studio": "Paramount+", "createdBy": "Διαχειριστής" }
     ];
@@ -678,13 +679,16 @@ function handleDownloadClick() {
                         <p style="font-size: 12px; opacity: 0.8;">2️⃣ Επικολλήστε το link σας (Terabox, Google Drive, κλπ.)</p>
                         <p style="font-size: 12px; opacity: 0.8;">3️⃣ Πατήστε <strong>Αποθήκευση</strong></p>
                     </div>
-                    <button onclick="this.closest('#downloadGuideModal').remove()" style="background: var(--primary); color: white; border: none; padding: 12px 30px; border-radius: 40px; cursor: pointer;">Κατάλαβα ✨</button>
+                    <button onclick="this.closest('#downloadGuideModal').remove()" class="download-guide-close" style="background: var(--primary); color: white; border: none; padding: 12px 30px; border-radius: 40px; cursor: pointer;">Κατάλαβα ✨</button>
                 </div>
             </div>
         `;
         const existing = document.getElementById('downloadGuideModal');
         if (existing) existing.remove();
         document.body.insertAdjacentHTML('beforeend', modalHtml);
+        document.querySelector('.download-guide-close').addEventListener('click', () => {
+            document.getElementById('downloadGuideModal')?.remove();
+        });
     }
 }
 
@@ -731,8 +735,13 @@ async function searchTMDB() {
         const res = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(title)}`);
         const data = await res.json();
         const resultsDiv = document.getElementById('searchResults');
+        resultsDiv.innerHTML = '';
         if (data.results && data.results.length > 0) {
-            resultsDiv.innerHTML = `<div style="padding:10px;background:var(--primary);color:white;font-weight:bold;border-radius:8px 8px 0 0;">📽️ Αποτελέσματα (${data.results.length})</div>`;
+            const header = document.createElement('div');
+            header.style.cssText = 'padding:10px;background:var(--primary);color:white;font-weight:bold;border-radius:8px 8px 0 0;';
+            header.textContent = `📽️ Αποτελέσματα (${data.results.length})`;
+            resultsDiv.appendChild(header);
+            
             for (let i = 0; i < Math.min(8, data.results.length); i++) {
                 const r = data.results[i];
                 const year = (r.release_date || '').substring(0, 4) || 'Άγνωστο';
@@ -1027,8 +1036,8 @@ function attachEventListeners() {
     if (loginBtn) loginBtn.addEventListener('click', () => showUserLogin());
     
     // Logout button
-    const logoutBtn = document.getElementById('logoutUserBtn');
-    if (logoutBtn) logoutBtn.addEventListener('click', () => logoutUser());
+    const logoutUserBtn = document.getElementById('logoutUserBtn');
+    if (logoutUserBtn) logoutUserBtn.addEventListener('click', () => logoutUser());
     
     // Update button
     const updateBtn = document.querySelector('.update-btn-header');
@@ -1039,28 +1048,28 @@ function attachEventListeners() {
     if (closeDashBtn) closeDashBtn.addEventListener('click', () => hideDashboard());
     
     // Dashboard action buttons
-    const searchByIdBtn = document.querySelector('.dash-btn[onclick="searchByID()"]');
+    const searchByIdBtn = document.getElementById('searchByIdBtn');
     if (searchByIdBtn) searchByIdBtn.addEventListener('click', () => searchByID());
     
-    const addMovieBtn = document.querySelector('.dash-btn[onclick="showAddMovieForm()"]');
-    if (addMovieBtn) addMovieBtn.addEventListener('click', () => showAddMovieForm());
+    const addMovieFormBtn = document.getElementById('addMovieFormBtn');
+    if (addMovieFormBtn) addMovieFormBtn.addEventListener('click', () => showAddMovieForm());
     
-    const posterEditorBtn = document.querySelector('.dash-btn[onclick="openPosterEditor()"]');
+    const posterEditorBtn = document.getElementById('posterEditorBtn');
     if (posterEditorBtn) posterEditorBtn.addEventListener('click', () => openPosterEditor());
     
-    const tmdbBtn = document.querySelector('.dash-btn[onclick="addMovieByTMDBId()"]');
-    if (tmdbBtn) tmdbBtn.addEventListener('click', () => addMovieByTMDBId());
+    const addByTmdbBtn = document.getElementById('addByTmdbBtn');
+    if (addByTmdbBtn) addByTmdbBtn.addEventListener('click', () => addMovieByTMDBId());
     
-    const exportBtn = document.querySelector('.dash-btn[onclick="exportToJSON()"]');
+    const exportBtn = document.getElementById('exportBtn');
     if (exportBtn) exportBtn.addEventListener('click', () => exportToJSON());
     
-    const removeLinksBtn = document.querySelector('.dash-btn[onclick="removeAllLinksAndExport()"]');
+    const removeLinksBtn = document.getElementById('removeLinksBtn');
     if (removeLinksBtn) removeLinksBtn.addEventListener('click', () => removeAllLinksAndExport());
     
-    const importBtn = document.querySelector('.dash-btn[onclick="document.getElementById(\'importFile\').click()"]');
+    const importBtn = document.getElementById('importBtn');
     if (importBtn) importBtn.addEventListener('click', () => document.getElementById('importFile').click());
     
-    const missingPostersBtn = document.querySelector('.dash-btn[onclick="showMissingPostersList()"]');
+    const missingPostersBtn = document.getElementById('missingPostersBtn');
     if (missingPostersBtn) missingPostersBtn.addEventListener('click', () => showMissingPostersList());
     
     const logoutAdminBtn = document.getElementById('logoutBtn');
@@ -1133,6 +1142,27 @@ function attachEventListeners() {
     
     const modalAddBtn = document.getElementById('modalAddBtn');
     if (modalAddBtn) modalAddBtn.addEventListener('click', () => showAddMovieForm());
+    
+    // Director and Writer clicks (modal)
+    const modalDirector = document.getElementById('modalDirector');
+    if (modalDirector) {
+        modalDirector.addEventListener('click', (e) => {
+            const value = e.target.innerText;
+            if (value && value !== '-') {
+                searchMoviesByDirectorOrWriter(value, 'director');
+            }
+        });
+    }
+    
+    const modalWriter = document.getElementById('modalWriter');
+    if (modalWriter) {
+        modalWriter.addEventListener('click', (e) => {
+            const value = e.target.innerText;
+            if (value && value !== '-') {
+                searchMoviesByDirectorOrWriter(value, 'writer');
+            }
+        });
+    }
 }
 
 // ============ INITIALIZATION ============
