@@ -1,4 +1,4 @@
-﻿// ============ ΑΡΧΙΚΟΠΟΙΗΣΗ ΑΠΟ CONFIG ============
+﻿﻿// ============ ΑΡΧΙΚΟΠΟΙΗΣΗ ΑΠΟ CONFIG ============
 let CONFIG = null;
 let TMDB_API_KEY = null;
 let GITHUB_CONFIG = null;
@@ -232,12 +232,13 @@ const posterCache = new Map();
 const actorImageCache = new Map();
 let recentMovieIds = [];
 
+// ✅ ΔΙΟΡΘΩΜΕΝΗ ΣΥΝΑΡΤΗΣΗ - το bug fix είναι εδώ!
 function updateRecentMoviesList() {
     if (!moviesData || moviesData.length === 0) return;
+    // ✅ ΣΩΣΤΟ - spread operator με τρεις τελείες
     const sortedByDate = [...moviesData].sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
     recentMovieIds = sortedByDate.slice(0, 10).map(m => m.id);
 }
-
 function isNewMovie(dateAdded, movieId) {
     if (!dateAdded || !movieId) return false;
     return recentMovieIds.includes(movieId);
@@ -387,7 +388,7 @@ async function loadMoviesData() {
     }
     
     moviesData = [
-        { "id": 1, "title": "1883", "year": 2021, "country": "United States", "genre": "Δράμα, Γουέστερн", "type": "Series", "quality": "HD", "rating": 8.7, "actors": "Sam Elliott, Tim McGraw, Faith Hill, Isabel May", "director": "Taylor Sheridan", "writer": "Taylor Sheridan", "link": "", "imdb": "", "tmdb": "", "desc": "Η ιστορία της οικογένειας Ντάτον καθώς ταξιδεύουν προς τη Δύση.", "dateAdded": new Date().toISOString().split('T')[0], "studio": "Paramount+", "createdBy": "Διαχειριστής" },
+        { "id": 1, "title": "1883", "year": 2021, "country": "United States", "genre": "Δράμα, Γουέστερν", "type": "Series", "quality": "HD", "rating": 8.7, "actors": "Sam Elliott, Tim McGraw, Faith Hill, Isabel May", "director": "Taylor Sheridan", "writer": "Taylor Sheridan", "link": "", "imdb": "", "tmdb": "", "desc": "Η ιστορία της οικογένειας Ντάτον καθώς ταξιδεύουν προς τη Δύση.", "dateAdded": new Date().toISOString().split('T')[0], "studio": "Paramount+", "createdBy": "Διαχειριστής" },
         { "id": 2, "title": "1899", "year": 2022, "country": "Germany", "genre": "Μυστηρίου, Δράμα", "type": "Series", "quality": "HD", "rating": 7.3, "actors": "Emily Beecham, Andreas Pietschmann", "director": "Baran bo Odar", "writer": "Baran bo Odar", "link": "", "imdb": "", "tmdb": "", "desc": "Μετανάστες ταξιδεύουν από την Ευρώπη στην Αμερική.", "dateAdded": new Date().toISOString().split('T')[0], "studio": "Netflix", "createdBy": "Διαχειριστής" },
         { "id": 3, "title": "1923", "year": 2022, "country": "United States", "genre": "Δράμα, Γουέστερν", "type": "Series", "quality": "HD", "rating": 8.3, "actors": "Harrison Ford, Helen Mirren", "director": "Taylor Sheridan", "writer": "Taylor Sheridan", "link": "", "imdb": "", "tmdb": "", "desc": "Η συνέχεια του 1883.", "dateAdded": new Date().toISOString().split('T')[0], "studio": "Paramount+", "createdBy": "Διαχειριστής" }
     ];
@@ -1012,7 +1013,7 @@ function showMissingPostersList() { alert('Λειτουργία ελέγχου p
 function searchByID() { const id = prompt('ID:'); const movie = moviesData.find(m => m.id == id); if(movie) openDetails(movie.title); else showToast('Δεν βρέθηκε', '#e50914'); }
 function loadDashboardState() { const auth = AdminAuth.isSessionValid(); const visible = localStorage.getItem('dashboardVisible') === 'true'; if (auth && visible) showDashboard(); else hideDashboard(); }
 
-// ============ EVENT LISTENERS (αντί για inline onclick) ============
+// ============ EVENT LISTENERS ============
 function attachEventListeners() {
     // Logo
     const logo = document.querySelector('.logo');
@@ -1173,7 +1174,6 @@ window.addEventListener('DOMContentLoaded', async () => {
     loadDashboardState();
     loadUserSession();
     
-    // Event listeners (αντί για inline onclick)
     attachEventListeners();
     
     setTimeout(() => checkForGitHubUpdates(), 3000);
