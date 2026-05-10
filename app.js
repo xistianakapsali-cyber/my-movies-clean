@@ -251,7 +251,6 @@ function searchMoviesWithFuse(searchTerm) {
         return moviesData;
     }
     
-    // Cache για γρήγορη επαναλαμβανόμενη αναζήτηση
     if (lastSearchTerm === searchTerm && lastSearchResults.length > 0) {
         return lastSearchResults;
     }
@@ -428,14 +427,12 @@ async function submitRequestWithData(tmdbData) {
         return;
     }
     
-    // Έλεγχος για υπάρχουσα ταινία
     const existingMovie = moviesData.find(m => m.title.toLowerCase() === title.toLowerCase() && m.year === year);
     if (existingMovie) {
         showToast(`⚠️ Η ταινία "${title}" (${year}) υπάρχει ήδη!`, '#e67e22');
         return;
     }
     
-    // Αποθήκευση στο localStorage (για τον χρήστη)
     const newId = moviesData.length ? Math.max(...moviesData.map(m => m.id)) + 1 : 1;
     
     const newMovie = {
@@ -467,7 +464,6 @@ async function submitRequestWithData(tmdbData) {
     moviesData.push(newMovie);
     saveToLocalStorage();
     
-    // ============ ΑΠΟΣΤΟΛΗ EMAIL ============
     try {
         const response = await fetch('https://api.web3forms.com/submit', {
             method: 'POST',
@@ -490,8 +486,7 @@ async function submitRequestWithData(tmdbData) {
 🕐 Ημερομηνία: ${new Date().toLocaleString('el-GR')}
 ━━━━━━━━━━━━━━━━━━━━━━
 
-👉 Μπες στο dashboard για έγκριση!
-                `,
+👉 Μπες στο dashboard για έγκριση!`,
                 replyto: "no-reply@yioio.com"
             })
         });
@@ -505,7 +500,6 @@ async function submitRequestWithData(tmdbData) {
         console.error('Email error:', error);
         showToast(`⚠️ Το αίτημα αποθηκεύτηκε (χωρίς email)`, '#e67e22');
     }
-    // ========================================
     
     posterCache.clear();
     actorImageCache.clear();
@@ -842,17 +836,14 @@ function searchMoviesByActor(actorName) {
     searchInput.value = actorName;
     toggleClearButton();
     
-    // Φιλτράρισμα ΜΟΝΟ στους ηθοποιούς (ακριβές match)
     const searchTerm = actorName.toLowerCase();
     
     let results = moviesData.filter(movie => {
         if (!movie.actors || movie.actors === 'N/A') return false;
-        // Ψάξε για ολόκληρο το όνομα (όχι μερικό)
         const actorsLower = movie.actors.toLowerCase();
         return actorsLower.includes(searchTerm);
     });
     
-    // Εφάρμοσε τα υπόλοιπα φίλτρα
     if (currentTypeFilter !== 'all') {
         results = results.filter(m => m.type === currentTypeFilter);
     }
@@ -893,19 +884,16 @@ function searchMoviesByActor(actorName) {
     }
 }
 
-// ΒΕΛΤΙΣΤΟΠΟΙΗΜΕΝΗ ΑΝΑΖΗΤΗΣΗ ΓΙΑ ΣΚΗΝΟΘΕΤΗ/ΣΕΝΑΡΙΟΓΡΑΦΟ
 function searchMoviesByDirectorOrWriter(value, type) {
     const searchInput = document.getElementById('movieSearch');
     searchInput.value = value;
     toggleClearButton();
     
-    // Απευθείας φιλτράρισμα χωρίς Fuse.js για γρηγορότερο αποτέλεσμα
     let results = moviesData.filter(m => 
         m.director?.toLowerCase().includes(value.toLowerCase()) || 
         m.writer?.toLowerCase().includes(value.toLowerCase())
     );
     
-    // Εφάρμοσε τα υπόλοιπα φίλτρα
     if (currentTypeFilter !== 'all') {
         results = results.filter(m => m.type === currentTypeFilter);
     }
@@ -979,7 +967,6 @@ async function loadMoviesData() {
     applyFilters();
 }
 
-// ============ GITHUB UPDATES ============
 async function checkForGitHubUpdates() {
     if (!GITHUB_CONFIG) {
         showToast('⚠️ GitHub settings not configured', '#e50914');
@@ -1075,7 +1062,6 @@ function applyFilters() {
     if (!moviesData.length) return;
     toggleClearButton();
     
-    // Debouncing για αποφυγή πολλαπλών κλήσεων
     if (searchTimeout) clearTimeout(searchTimeout);
     
     searchTimeout = setTimeout(() => {
@@ -1087,7 +1073,6 @@ function performSearch() {
     let term = document.getElementById('movieSearch').value.toLowerCase();
     let results = [];
     
-    // Χρήση Fuse.js μόνο για μεγάλες αναζητήσεις
     if (term && term.length >= 2) {
         results = searchMoviesWithFuse(term);
     } else if (term && term.length === 1) {
@@ -1868,13 +1853,8 @@ function attachEventListeners() {
             }
         });
     }
-	function attachEventListeners() {
-    // ... όλος ο υπάρχων κώδικας (είναι πολύς) ...
     
-    // ============ ΥΠΑΡΧΟΝΤΑ EVENT LISTENERS ============
-    // (όλοι οι άλλοι κώδικες εδώ)
-    
-    // ============ ΠΡΟΣΘΕΣΕ ΤΟΝ ΝΕΟ ΚΩΔΙΚΑ ΕΔΩ ============
+    // ============ ΠΡΟΣΘΗΚΗ ΓΡΗΓΟΡΗΣ ΠΡΟΣΘΗΚΗΣ ΑΠΟ EMAIL ============
     const quickAddBtn = document.getElementById('quickAddBtn');
     if (quickAddBtn) {
         quickAddBtn.addEventListener('click', () => {
@@ -1896,7 +1876,6 @@ function attachEventListeners() {
             saveRequestsToLocalStorage();
             showToast(`✅ Προστέθηκε: ${title}`, '#2ecc71');
             
-            // Ανανέωσε το panel αν είναι ανοιχτό
             const panel = document.getElementById('requestsPanel');
             if (panel) {
                 panel.remove();
@@ -1904,7 +1883,7 @@ function attachEventListeners() {
             }
         });
     }
-}
+    // ================================================================
     
     window.approveExistingMovie = approveExistingMovie;
     window.rejectAndDeleteMovie = rejectAndDeleteMovie;
