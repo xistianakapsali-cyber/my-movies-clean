@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>YIOIO Ultimate Database 2026 - Secure</title>
 <link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0/dist/fuse.min.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
 </head>
 <body>
 
@@ -41,6 +44,7 @@
         <button class="dash-btn" id="addMovieFormBtn" style="background:#2ecc71;color:white;">➕ Προσθήκη Ταινίας/Σειράς</button>
         <button class="dash-btn" id="posterEditorBtn">Επεξεργασία Poster</button>
         <button class="dash-btn" id="addByTmdbBtn" style="background:#9b59b6;color:white;">🎬 Προσθήκη από TMDB ID</button>
+        <button class="dash-btn" id="viewRequestsBtn" style="background:#9b59b6;color:white;">📋 Αιτήματα Ταινιών</button>
         <button class="dash-btn" id="exportBtn">📤 Export JSON (τρέχον)</button>
         <button class="dash-btn" id="removeLinksBtn" style="background:#e67e22;color:white;">🗑️ Αφαίρεση όλων των Link & Export</button>
         <button class="dash-btn" id="importBtn">📥 Import JSON</button>
@@ -67,6 +71,7 @@
             <option value="latest">Πρόσφατες Προσθήκες</option>
             <option value="qualityHD">Ποιότητα (HD/4K πρώτα)</option>
             <option value="qualitySD">Ποιότητα (SD πρώτα)</option>
+            <option value="pendingOnly">⏳ Σε Αναμονή</option>
         </select>
         <select id="yearFilter"><option value="All">Όλα τα έτη</option></select>
         <select id="countryFilter"><option value="All">Όλες οι Χώρες</option></select>
@@ -74,7 +79,7 @@
     </div>
 </div>
 
-<div class="movie-grid" id="movieGrid"><div style="text-align:center;padding:50px;">Φόρτωση δεδομένων...</div></div>
+<div class="movie-grid dashboard-hidden" id="movieGrid"><div style="text-align:center;padding:50px;">Φόρτωση δεδομένων...</div></div>
 <button id="loadMoreBtn" style="display:none;">ΦΟΡΤΩΣΗ ΠΕΡΙΣΣΟΤΕΡΩΝ</button>
 
 <div id="detailModal">
@@ -83,7 +88,7 @@
         <img id="modalImg" class="modal-poster" src="" alt="Poster">
         <div class="modal-info">
             <h2 id="modalTitle"></h2>
-            <div class="modal-meta-bar">
+            <div class="modal-meta-bar" id="modalMetaBar">
                 <span class="year-badge" id="modalYear"></span>
                 <span id="modalQualityBadge"></span>
                 <span id="modalTypeBadge"></span>
@@ -103,6 +108,7 @@
                     <button id="modalEditBtn" class="modal-icon-btn" style="display:none;">✏️ Επεξεργασία</button>
                     <button id="modalDeleteBtn" class="modal-icon-btn danger" style="display:none;">🗑️ Διαγραφή</button>
                     <button id="modalAddBtn" class="modal-icon-btn" style="display:none; background:#2ecc71;">➕ Προσθήκη</button>
+                    <button id="modalRequestBtn" class="modal-icon-btn" style="background:#9b59b6;display:none;">📢 Ζήτησε Ταινία</button>
                 </div>
             </div>
             <div class="modal-description" id="modalDesc"></div>
