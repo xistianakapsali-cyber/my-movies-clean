@@ -1171,7 +1171,7 @@ async function renderMovies() {
             <div class="img-container">
                 <div class="quality-tag ${m.quality === 'SD' ? 'sd-blue' : ''}">${m.quality||'HD'}</div>
                 ${isNewMovie(m.dateAdded, m.id) ? '<div class="new-badge-poster">ΝΕΟ</div>' : ''}
-                ${m.status === 'pending' ? '<div class="pending-badge">⏳ ΣΕ ΑΝΑΜΟΝΗ</div>' : ''}
+                ${m.status === 'pending' ? '<div class="pending-badge"> ΣΕ ΑΝΑΜΟΝΗ</div>' : ''}
                 <img src="${LOADING_POSTER}" data-title="${escapeHtml(m.title)}" data-year="${m.year}" data-type="${m.type==='Series'?'tv':'movie'}" data-id="${m.id}" class="poster-load" loading="lazy">
             </div>
             <div class="info">
@@ -1273,7 +1273,7 @@ function openDetailsById(id) {
         const statusBadge = document.createElement('span');
         statusBadge.id = 'modalStatusBadge';
         statusBadge.className = 'pending-status-badge';
-        statusBadge.innerHTML = '⏳ ΣΕ ΑΝΑΜΟΝΗ';
+        statusBadge.innerHTML = ' ΣΕ ΑΝΑΜΟΝΗ';
         metaBar.appendChild(statusBadge);
     }
     
