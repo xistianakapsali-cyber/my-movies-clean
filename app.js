@@ -1868,6 +1868,43 @@ function attachEventListeners() {
             }
         });
     }
+	function attachEventListeners() {
+    // ... όλος ο υπάρχων κώδικας (είναι πολύς) ...
+    
+    // ============ ΥΠΑΡΧΟΝΤΑ EVENT LISTENERS ============
+    // (όλοι οι άλλοι κώδικες εδώ)
+    
+    // ============ ΠΡΟΣΘΕΣΕ ΤΟΝ ΝΕΟ ΚΩΔΙΚΑ ΕΔΩ ============
+    const quickAddBtn = document.getElementById('quickAddBtn');
+    if (quickAddBtn) {
+        quickAddBtn.addEventListener('click', () => {
+            const title = prompt('📧 Τίτλος ταινίας από email:');
+            if (!title) return;
+            const year = prompt('📅 Έτος:');
+            if (!year) return;
+            const requester = prompt('👤 Από ποιον; (προαιρετικό)') || 'Από email';
+            
+            movieRequests.push({
+                id: Date.now(),
+                title: title,
+                year: parseInt(year),
+                requester: requester,
+                dateRequested: new Date().toISOString().split('T')[0],
+                status: 'pending'
+            });
+            
+            saveRequestsToLocalStorage();
+            showToast(`✅ Προστέθηκε: ${title}`, '#2ecc71');
+            
+            // Ανανέωσε το panel αν είναι ανοιχτό
+            const panel = document.getElementById('requestsPanel');
+            if (panel) {
+                panel.remove();
+                showRequestsPanel();
+            }
+        });
+    }
+}
     
     window.approveExistingMovie = approveExistingMovie;
     window.rejectAndDeleteMovie = rejectAndDeleteMovie;
