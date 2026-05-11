@@ -236,14 +236,14 @@ header { padding: 15px 5%; background: var(--card); position: sticky; top: 0; z-
 }
 
 .info-grid-label { 
-    font-size: 12px; 
+    font-size: 15px; 
     font-weight: 600; 
     color: var(--text); 
     text-align: left; 
 }
 
 .info-grid-value { 
-    font-size: 14px; 
+    font-size: 15px; 
     color: var(--text); 
     font-weight: 500; 
     text-align: left; 
