@@ -28,7 +28,7 @@ header { padding: 15px 5%; background: var(--card); position: sticky; top: 0; z-
 .filter-group { display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; margin: 20px 0; }
 .filter-group select { padding: 10px 20px; border-radius: 25px; background: var(--card); color: var(--text); border: 1px solid var(--border); cursor: pointer; font-size: 14px; min-width: 150px; }
 
-/* MOVIE GRID - ΑΠΟ ΑΚΡΗ ΣΕ ΑΚΡΗ */
+/* MOVIE GRID */
 .movie-grid { 
     display: grid; 
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); 
@@ -77,7 +77,7 @@ header { padding: 15px 5%; background: var(--card); position: sticky; top: 0; z-
 .play-btn { background: var(--primary); color: white; padding: 8px; border-radius: 8px; font-size: 11px; font-weight: bold; display: block; text-align: center; }
 #loadMoreBtn { display: block; margin: 20px auto 50px; padding: 12px 30px; background: var(--primary); color: white; border: none; border-radius: 30px; cursor: pointer; }
 
-/* MODAL - ΚΕΝΤΡΑΡΙΣΜΕΝΟ, ΟΧΙ FULLSCREEN, POSTER ΟΛΟΚΛΗΡΟ */
+/* MODAL */
 #detailModal { 
     display: none; 
     position: fixed; 
@@ -219,10 +219,11 @@ header { padding: 15px 5%; background: var(--card); position: sticky; top: 0; z-
     text-align: left;
 }
 
+/* INFO GRID - 2 ΣΤΗΛΕΣ με μεγαλύτερη γραμματοσειρά */
 .info-grid { 
-    display: flex;
-    flex-direction: column;
-    gap: 12px; 
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px; 
     margin: 15px 0; 
     background: rgba(0,0,0,0.2); 
     padding: 15px; 
@@ -232,27 +233,30 @@ header { padding: 15px 5%; background: var(--card); position: sticky; top: 0; z-
 .info-grid-item { 
     display: flex; 
     flex-direction: column; 
-    gap: 4px;
+    gap: 6px;
 }
 
 .info-grid-label { 
-    font-size: 15px; 
+    font-size: 14px;
     font-weight: 600; 
     color: var(--text); 
+    opacity: 0.8;
     text-align: left; 
 }
 
 .info-grid-value { 
-    font-size: 15px; 
+    font-size: 16px;
     color: var(--text); 
     font-weight: 500; 
     text-align: left; 
+    word-break: break-word;
 }
 
+/* ACTORS - 90px ΧΩΡΙΣ ΚΟΚΚΙΝΟ ΠΕΡΙΒΛΗΜΑ */
 .actors-container { 
     display: flex; 
     flex-wrap: wrap; 
-    gap: 12px; 
+    gap: 15px; 
     margin-top: 5px; 
     justify-content: flex-start; 
     padding: 0; 
@@ -265,7 +269,7 @@ header { padding: 15px 5%; background: var(--card); position: sticky; top: 0; z-
     cursor: pointer; 
     transition: all 0.2s ease; 
     text-align: center; 
-    width: 80px; 
+    width: 100px; 
     background: transparent; 
     padding: 8px 5px; 
     border-radius: 8px; 
@@ -277,87 +281,71 @@ header { padding: 15px 5%; background: var(--card); position: sticky; top: 0; z-
 }
 
 .actor-avatar { 
-    width: 60px; 
-    height: 60px; 
-    border-radius: 8px; 
+    width: 90px;
+    height: 90px;
+    border-radius: 12px; 
     object-fit: cover; 
-    margin-bottom: 6px; 
-    border: none; 
+    margin-bottom: 8px; 
+    border: none;
 }
 
 .actor-placeholder { 
-    width: 60px; 
-    height: 60px; 
-    border-radius: 8px; 
+    width: 90px;
+    height: 90px;
+    border-radius: 12px; 
     background: #34495e; 
     display: flex; 
     align-items: center; 
     justify-content: center; 
-    font-size: 28px; 
+    font-size: 36px;
     color: white; 
-    margin-bottom: 6px; 
+    margin-bottom: 8px; 
 }
 
 .actor-name { 
-    font-size: 11px; 
-    font-weight: 500; 
+    font-size: 13px; 
+    font-weight: 600; 
     text-align: center; 
     color: #eee; 
-    max-width: 80px; 
+    max-width: 100px; 
     overflow: hidden; 
     text-overflow: ellipsis; 
 }
 
-.download-btn-yts { 
-    background: linear-gradient(135deg, #e50914 0%, #b80710 100%); 
-    color: white; 
-    border: none; 
-    padding: 12px 24px; 
-    border-radius: 40px; 
-    font-size: 16px; 
-    font-weight: bold; 
-    cursor: pointer; 
-    transition: all 0.3s ease; 
-    text-align: center; 
-    display: inline-block; 
-    min-width: 140px; 
-    box-shadow: 0 8px 20px rgba(229,9,20,0.4);
+/* ΟΛΑ ΤΑ ΚΟΥΜΠΙΑ ΜΕΣΑ ΣΤΟ MODAL - ΙΔΙΟ ΜΕΓΕΘΟΣ */
+.modal-icon-btn, .download-btn-yts {
+    background: rgba(255,255,255,0.1);
+    border: none;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 30px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    font-family: inherit;
 }
 
-.download-btn-yts:hover { 
-    transform: scale(1.02); 
-    box-shadow: 0 12px 28px rgba(229,9,20,0.6); 
+.modal-icon-btn:hover, .download-btn-yts:hover {
+    background: rgba(255,255,255,0.25);
+    transform: translateY(-2px);
 }
 
-.modal-buttons-row { 
-    display: flex; 
-    gap: 12px; 
-    margin-top: 10px; 
-    flex-wrap: wrap; 
+.modal-icon-btn.danger:hover {
+    background: #e50914;
 }
 
-.modal-icon-btn { 
-    background: rgba(255,255,255,0.1); 
-    border: none; 
-    color: white; 
-    padding: 8px 16px; 
-    border-radius: 30px; 
-    font-size: 12px; 
-    cursor: pointer; 
-    transition: background 0.2s; 
-    display: inline-flex; 
-    align-items: center; 
-    gap: 6px; 
-    text-decoration: none; 
-    font-weight: bold; 
+.download-btn-yts {
+    background: linear-gradient(135deg, #e50914 0%, #b80710 100%);
 }
 
-.modal-icon-btn:hover { 
-    background: rgba(255,255,255,0.2); 
-}
-
-.modal-icon-btn.danger:hover { 
-    background: #e50914; 
+.download-btn-yts:hover {
+    background: linear-gradient(135deg, #b80710 0%, #8b0610 100%);
+    transform: translateY(-2px);
 }
 
 .close-modal { 
@@ -427,6 +415,36 @@ header { padding: 15px 5%; background: var(--card); position: sticky; top: 0; z-
     .dashboard { display: none; }
     .new-badge-poster { left: 55px; }
     .pending-badge { left: 110px; }
+    
+    /* Responsive για ηθοποιούς σε κινητά */
+    .actor-avatar { 
+        width: 70px; 
+        height: 70px; 
+    }
+    .actor-placeholder { 
+        width: 70px; 
+        height: 70px; 
+        font-size: 28px;
+    }
+    .actor-name { 
+        font-size: 11px; 
+        max-width: 80px;
+    }
+    .actor-item { 
+        width: 80px;
+    }
+    
+    /* Responsive για info grid σε κινητά */
+    .info-grid { 
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    .info-grid-label { 
+        font-size: 12px;
+    }
+    .info-grid-value { 
+        font-size: 14px;
+    }
 }
 
 #backToTop { position: fixed; bottom: 30px; right: 30px; width: 50px; height: 50px; background: var(--primary); color: white; border: none; border-radius: 50%; font-size: 20px; cursor: pointer; display: none; z-index: 3000; }

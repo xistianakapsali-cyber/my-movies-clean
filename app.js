@@ -1640,22 +1640,47 @@ function saveNewMovie() {
         showToast('Πρέπει να συνδεθείτε για να προσθέσετε ταινία!', '#e50914');
         return;
     }
+    
     const title = document.getElementById('newTitle').value.trim();
     const year = parseInt(document.getElementById('newYear').value);
-    if (!title || !year) { showToast('Συμπλήρωσε τίτλο και έτος', '#e50914'); return; }
-    if (isDuplicateMovie(title, year)) { showToast('Υπάρχει ήδη!', '#e50914'); return; }
+    
+    if (!title || !year) { 
+        showToast('Συμπλήρωσε τίτλο και έτος', '#e50914'); 
+        return; 
+    }
+    
+    if (isDuplicateMovie(title, year)) { 
+        showToast('Υπάρχει ήδη!', '#e50914'); 
+        return; 
+    }
+    
+    const linkValue = document.getElementById('newLink').value || '';
     const newId = moviesData.length ? Math.max(...moviesData.map(m => m.id)) + 1 : 4;
+    
     const newMovie = { 
-        id: newId, title, year, type: document.getElementById('newType').value, quality: document.getElementById('newQuality').value,
-        actors: document.getElementById('newActors').value || 'N/A', link: document.getElementById('newLink').value || '',
-        dateAdded: new Date().toISOString().split('T')[0], studio: document.getElementById('newStudio').value || 'Κανάλι',
-        rating: parseFloat(document.getElementById('newRating').value) || 0, country: document.getElementById('newCountry').value || 'N/A',
-        genre: document.getElementById('newGenre').value || 'N/A', director: document.getElementById('newDirector').value || 'N/A',
-        writer: document.getElementById('newWriter').value || 'N/A', imdb: document.getElementById('newImdb').value || '',
-        tmdb: document.getElementById('newTmdb').value || '', desc: document.getElementById('newDesc').value || '',
-        poster_url: tempPoster || null, createdBy: currentUserName || 'Χρήστης',
-        status: 'active'
+        id: newId, 
+        title: title, 
+        year: year, 
+        type: document.getElementById('newType').value, 
+        quality: document.getElementById('newQuality').value,
+        actors: document.getElementById('newActors').value || 'N/A', 
+        link: linkValue,
+        dateAdded: new Date().toISOString().split('T')[0], 
+        studio: document.getElementById('newStudio').value || 'Κανάλι',
+        rating: parseFloat(document.getElementById('newRating').value) || 0, 
+        country: document.getElementById('newCountry').value || 'N/A',
+        genre: document.getElementById('newGenre').value || 'N/A', 
+        director: document.getElementById('newDirector').value || 'N/A',
+        writer: document.getElementById('newWriter').value || 'N/A', 
+        imdb: document.getElementById('newImdb').value || '',
+        tmdb: document.getElementById('newTmdb').value || '', 
+        desc: document.getElementById('newDesc').value || '',
+        poster_url: tempPoster || null, 
+        createdBy: currentUserName || 'Χρήστης',
+        // ⭐ Η ΜΑΓΙΚΗ ΓΡΑΜΜΗ - ΑΝ ΔΕΝ ΕΧΕΙ LINK, ΜΠΑΙΝΕΙ ΣΕ ΑΝΑΜΟΝΗ
+        status: linkValue ? 'active' : 'pending'
     };
+    
     moviesData.push(newMovie);
     saveToLocalStorage();
     updateRecentMoviesList();
@@ -1664,7 +1689,12 @@ function saveNewMovie() {
     applyFilters();
     closeAddMovieForm();
     tempPoster = null;
-    showToast(`✅ Προστέθηκε: ${title} από ${currentUserName}`, '#2ecc71');
+    
+    if (linkValue) {
+        showToast(`✅ Προστέθηκε: ${title} από ${currentUserName}`, '#2ecc71');
+    } else {
+        showToast(`⏳ Προστέθηκε: ${title} (ΣΕ ΑΝΑΜΟΝΗ - χωρίς link)`, '#e67e22');
+    }
 }
 
 let currentEditingMovieId = null;
@@ -1719,6 +1749,7 @@ function closeEditForm() { document.getElementById('editMovieModal')?.remove(); 
 function saveEditedMovie() {
     const idx = moviesData.findIndex(m => m.id === currentEditingMovieId);
     if (idx === -1) return;
+    
     const title = document.getElementById('editTitle').value.trim();
     const year = parseInt(document.getElementById('editYear').value);
     const rating = parseFloat(document.getElementById('editRating').value) || 0;
@@ -1726,7 +1757,10 @@ function saveEditedMovie() {
     const oldLink = moviesData[idx].link;
     const newDateAdded = document.getElementById('editDateAdded').value;
     
-    if (isDuplicateMovie(title, year, currentEditingMovieId)) { showToast('Υπάρχει ήδη!', '#e50914'); return; }
+    if (isDuplicateMovie(title, year, currentEditingMovieId)) { 
+        showToast('Υπάρχει ήδη!', '#e50914'); 
+        return; 
+    }
     
     const wasPending = moviesData[idx].status === 'pending';
     const hasNewLink = newLink && newLink !== '';
@@ -1744,6 +1778,7 @@ function saveEditedMovie() {
         dateAdded: newDateAdded
     };
     
+    // ⭐ ΑΝ ΕΙΧΕ "ΣΕ ΑΝΑΜΟΝΗ" ΚΑΙ ΤΩΡΑ ΠΡΟΣΤΕΘΗΚΕ LINK, ΑΦΑΙΡΕΙΤΑΙ ΑΥΤΟΜΑΤΑ
     if (wasPending && hasNewLink && hadNoLink) {
         moviesData[idx].status = 'active';
         moviesData[idx].approvedDate = new Date().toISOString().split('T')[0];
