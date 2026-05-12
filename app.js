@@ -935,31 +935,44 @@ let searchTimeout = null;
 
 function applyFilters() {
     if (!moviesData.length) return;
+    
+    // ⭐ ΑΝΑΓΚΑΣΤΙΚΟ re-sync του filteredMovies με το moviesData
+    if (filteredMovies.length !== moviesData.length) {
+        filteredMovies = [...moviesData];
+    }
+    
     toggleClearButton();
-    
     if (searchTimeout) clearTimeout(searchTimeout);
-    
-    searchTimeout = setTimeout(() => {
-        performSearch();
-    }, 100);
+    searchTimeout = setTimeout(() => performSearch(), 100);
 }
 
 function performSearch() {
-    let term = document.getElementById('movieSearch').value.toLowerCase();
+    let term = document.getElementById('movieSearch').value.toLowerCase().trim();
     let results = [];
     
     if (term && term.length >= 2) {
-        results = searchMoviesWithFuse(term);
-    } else if (term && term.length === 1) {
+        // ⭐ ΑΝΑΖΗΤΗΣΗ ΚΑΙ ΣΤΟΥΣ ΔΥΟ ΤΙΤΛΟΥΣ (ελληνικό + αγγλικό)
         results = moviesData.filter(m => 
-            m.title.toLowerCase().includes(term) || 
-            m.actors?.toLowerCase().includes(term) || 
-            m.director?.toLowerCase().includes(term)
+            m.title.toLowerCase().includes(term) ||
+            (m.original_title && m.original_title.toLowerCase().includes(term))
         );
-    } else {
+        
+        // Αν δεν βρήκε τίποτα, χρησιμοποίησε Fuse.js (για ηθοποιούς, σκηνοθέτες)
+        if (results.length === 0) {
+            results = searchMoviesWithFuse(term);
+        }
+    } 
+    else if (!term) {
         results = [...moviesData];
     }
+    else if (term.length === 1) {
+        results = moviesData.filter(m => 
+            m.title.toLowerCase().includes(term) ||
+            (m.original_title && m.original_title.toLowerCase().includes(term))
+        );
+    }
     
+    // ΤΑ ΥΠΟΛΟΙΠΑ ΦΙΛΤΡΑ ΠΑΡΑΜΕΝΟΥΝ ΟΠΩΣ ΕΙΝΑΙ
     if (currentTypeFilter !== 'all') {
         results = results.filter(m => m.type === currentTypeFilter);
     }
@@ -1795,22 +1808,62 @@ function saveEditedMovie() {
     showToast('✅ Αποθηκεύτηκε', '#2ecc71');
     setTimeout(() => openDetailsById(moviesData[idx].id), 300);
 }
-
 function deleteMovieById(id) {
-    if (!isUserLoggedIn) { showToast('Συνδεθείτε για διαγραφή', '#e50914'); return false; }
+    if (!isUserLoggedIn) { 
+        showToast('Συνδεθείτε για διαγραφή', '#e50914'); 
+        return false; 
+    }
     if (!confirm('Μόνιμη διαγραφή;')) return false;
+    
     const title = moviesData.find(m => m.id === id)?.title;
     moviesData = moviesData.filter(m => m.id !== id);
-    moviesData.forEach((m, i) => m.id = i+1);
+    
+    // ⭐ ΑΝΑΝΕΩΣΗ ID
+    moviesData.forEach((m, i) => m.id = i + 1);
+    
     saveToLocalStorage();
     updateRecentMoviesList();
     initFilters();
     initFuseSearch();
+    
+    // ⭐⭐ ΚΡΙΣΙΜΟ: RESET όλων των filters και της σελίδας!
+    currentPage = 1;
+    currentTypeFilter = 'all';
+    filteredMovies = [...moviesData];
+    
+    // ⭐⭐⭐ ΚΑΘΑΡΙΣΜΟΣ search input
+    const searchInput = document.getElementById('movieSearch');
+    if (searchInput) {
+        searchInput.value = '';
+        toggleClearButton();
+    }
+    
+    // ⭐⭐⭐⭐ RESET dropdowns
+    const genreFilter = document.getElementById('genreFilter');
+    const yearFilter = document.getElementById('yearFilter');
+    const countryFilter = document.getElementById('countryFilter');
+    const studioFilter = document.getElementById('studioFilter');
+    const sortSelect = document.getElementById('sortSelect');
+    
+    if (genreFilter) genreFilter.value = 'All';
+    if (yearFilter) yearFilter.value = 'All';
+    if (countryFilter) countryFilter.value = 'All';
+    if (studioFilter) studioFilter.value = 'All';
+    if (sortSelect) sortSelect.value = 'title';
+    
+    // ⭐⭐⭐⭐⭐ RESET active type button
+    document.querySelectorAll('.filter-type-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.type === 'all');
+    });
+    
+    // Τέλος, εφαρμόζουμε τα filters
     applyFilters();
+    
     closeDetails();
-    showToast(`Διαγράφηκε: ${title}`, '#2ecc71');
+    showToast(`🗑️ Διαγράφηκε: ${title}`, '#2ecc71');
     return true;
 }
+
 
 function deleteMovieFromModal() { if (currentModalMovieId) deleteMovieById(currentModalMovieId); }
 
