@@ -479,3 +479,89 @@ header { padding: 15px 5%; background: var(--card); position: sticky; top: 0; z-
 .request-tab-btn { background: var(--input-bg); color: var(--text); border: none; padding: 8px 20px; border-radius: 20px; cursor: pointer; font-size: 14px; transition: all 0.2s; }
 .request-tab-btn.active { background: var(--primary); color: white; }
 .request-tab-btn:hover { background: var(--primary); color: white; opacity: 0.8; }
+/* ============ ΜΕΓΑΛΥΤΕΡΕΣ ΓΡΑΜΜΑΤΟΣΕΙΡΕΣ ΣΤΟ MODAL ============ */
+.modal-info {
+    font-size: 18px;
+}
+
+.modal-info h2 {
+    font-size: 36px;
+}
+
+.modal-description {
+    font-size: 17px;
+    line-height: 1.7;
+}
+
+.info-grid-label {
+    font-size: 16px;
+}
+
+.info-grid-value {
+    font-size: 18px;
+    font-weight: 500;
+}
+
+.rating-stars-big {
+    font-size: 30px;
+}
+
+.rating-value-big {
+    font-size: 32px;
+}
+
+.actor-name {
+    font-size: 15px;
+}
+
+.modal-meta-bar span {
+    font-size: 14px;
+    padding: 5px 14px;
+}
+
+/* ============ ΜΕΓΑΛΥΤΕΡΑ ΚΟΥΜΠΙΑ ΣΥΛΛΟΓΩΝ ============ */
+.collections-section {
+    text-align: left;
+    margin: 18px 0;
+    padding: 12px;
+    background: var(--input-bg);
+    border-radius: 12px;
+}
+
+.collections-label {
+    text-align: left;
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 12px;
+    color: var(--primary);
+}
+
+.collections-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: flex-start;
+}
+
+.collection-btn {
+    padding: 8px 20px;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid var(--border);
+    background: var(--input-bg);
+    color: var(--text);
+}
+
+.collection-btn.active {
+    background: var(--primary) !important;
+    color: white !important;
+    border-color: var(--primary);
+}
+
+.collection-btn:hover {
+    background: rgba(229,9,20,0.15);
+    transform: translateY(-2px);
+}
